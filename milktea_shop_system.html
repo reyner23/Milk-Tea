@@ -1,0 +1,485 @@
+
+<h2 class="sr-only">Milk Tea Online Shop Management System — full dashboard prototype with inventory, orders, recipes, purchasing, and profit tracking.</h2>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font-sans); color: var(--color-text-primary); }
+  .shell { display: flex; min-height: 620px; border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); overflow: hidden; background: var(--color-background-primary); }
+  .sidebar { width: 188px; flex-shrink: 0; border-right: 0.5px solid var(--color-border-tertiary); background: var(--color-background-secondary); padding: 16px 0; display: flex; flex-direction: column; gap: 2px; }
+  .sidebar-brand { padding: 0 16px 14px; font-size: 14px; font-weight: 500; border-bottom: 0.5px solid var(--color-border-tertiary); margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+  .brand-dot { width: 20px; height: 20px; border-radius: 50%; background: #1D9E75; display: flex; align-items: center; justify-content: center; }
+  .nav-item { display: flex; align-items: center; gap: 9px; padding: 8px 16px; font-size: 13px; cursor: pointer; color: var(--color-text-secondary); border-radius: 0; transition: all 0.12s; }
+  .nav-item:hover { background: var(--color-background-primary); color: var(--color-text-primary); }
+  .nav-item.active { background: var(--color-background-primary); color: var(--color-text-primary); font-weight: 500; border-left: 2px solid #1D9E75; }
+  .nav-icon { width: 15px; height: 15px; flex-shrink: 0; }
+  .main { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+  .topbar { padding: 14px 20px; border-bottom: 0.5px solid var(--color-border-tertiary); display: flex; align-items: center; justify-content: space-between; }
+  .page-title { font-size: 15px; font-weight: 500; }
+  .topbar-right { display: flex; align-items: center; gap: 8px; }
+  .badge { font-size: 11px; padding: 3px 8px; border-radius: 99px; font-weight: 500; }
+  .badge-warn { background: #FAEEDA; color: #633806; }
+  .badge-danger { background: #FCEBEB; color: #791F1F; }
+  .badge-ok { background: #EAF3DE; color: #27500A; }
+  .content { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+  .page { display: none; flex-direction: column; gap: 16px; }
+  .page.active { display: flex; }
+  .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .metric-card { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 12px 14px; }
+  .metric-label { font-size: 11px; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px; }
+  .metric-val { font-size: 22px; font-weight: 500; }
+  .metric-sub { font-size: 11px; color: var(--color-text-secondary); margin-top: 2px; }
+  .section { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); overflow: hidden; }
+  .section-head { padding: 12px 16px; border-bottom: 0.5px solid var(--color-border-tertiary); display: flex; align-items: center; justify-content: space-between; }
+  .section-title { font-size: 13px; font-weight: 500; }
+  .btn { font-size: 12px; padding: 5px 12px; border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); background: transparent; color: var(--color-text-primary); cursor: pointer; }
+  .btn:hover { background: var(--color-background-secondary); }
+  .btn-primary { background: #1D9E75; color: #fff; border-color: #0F6E56; }
+  .btn-primary:hover { background: #0F6E56; }
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  th { text-align: left; padding: 8px 14px; font-size: 11px; font-weight: 500; color: var(--color-text-secondary); border-bottom: 0.5px solid var(--color-border-tertiary); background: var(--color-background-secondary); }
+  td { padding: 9px 14px; border-bottom: 0.5px solid var(--color-border-tertiary); color: var(--color-text-primary); }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--color-background-secondary); }
+  .stock-bar-wrap { width: 80px; height: 5px; background: var(--color-background-secondary); border-radius: 99px; overflow: hidden; display: inline-block; vertical-align: middle; margin-right: 6px; }
+  .stock-bar { height: 100%; border-radius: 99px; }
+  .alert-row { display: flex; align-items: flex-start; gap: 10px; padding: 10px 14px; border-bottom: 0.5px solid var(--color-border-tertiary); }
+  .alert-row:last-child { border-bottom: none; }
+  .alert-icon { width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 500; flex-shrink: 0; margin-top: 1px; }
+  .alert-text { font-size: 12.5px; }
+  .alert-sub { font-size: 11px; color: var(--color-text-secondary); margin-top: 2px; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .recipe-chip { display: inline-flex; align-items: center; gap: 4px; background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 3px 8px; font-size: 11px; color: var(--color-text-secondary); margin: 2px; }
+  .platform-row { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-bottom: 0.5px solid var(--color-border-tertiary); }
+  .platform-row:last-child { border-bottom: none; }
+  .platform-name { font-size: 13px; font-weight: 500; flex: 1; }
+  .platform-stat { text-align: right; }
+  .platform-stat .val { font-size: 13px; font-weight: 500; }
+  .platform-stat .lbl { font-size: 10px; color: var(--color-text-secondary); }
+  .flow-steps { display: flex; gap: 0; overflow: hidden; }
+  .flow-step { flex: 1; padding: 10px 12px; background: var(--color-background-secondary); text-align: center; position: relative; font-size: 11px; }
+  .flow-step + .flow-step::before { content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 0; height: 0; border-top: 10px solid transparent; border-bottom: 10px solid transparent; border-left: 8px solid var(--color-background-primary); }
+  .flow-step-num { width: 18px; height: 18px; border-radius: 50%; background: #1D9E75; color: #fff; font-size: 10px; font-weight: 500; display: flex; align-items: center; justify-content: center; margin: 0 auto 4px; }
+  .flow-step-label { color: var(--color-text-secondary); font-size: 10.5px; }
+  .tabs { display: flex; gap: 0; border-bottom: 0.5px solid var(--color-border-tertiary); }
+  .tab { padding: 9px 16px; font-size: 12.5px; cursor: pointer; color: var(--color-text-secondary); border-bottom: 2px solid transparent; }
+  .tab.active { color: var(--color-text-primary); border-bottom-color: #1D9E75; font-weight: 500; }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+  .profit-bar { display: flex; height: 6px; border-radius: 99px; overflow: hidden; gap: 1px; margin: 6px 0; }
+  .pb-seg { height: 100%; border-radius: 0; }
+  .legend-row { display: flex; gap: 12px; font-size: 10.5px; color: var(--color-text-secondary); flex-wrap: wrap; }
+  .legend-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; }
+  .order-status { font-size: 11px; padding: 2px 7px; border-radius: 99px; font-weight: 500; }
+  .status-completed { background: #EAF3DE; color: #27500A; }
+  .status-pending { background: #FAEEDA; color: #633806; }
+  .status-cancelled { background: #FCEBEB; color: #791F1F; }
+  .chart-bars { display: flex; align-items: flex-end; gap: 6px; height: 90px; }
+  .chart-bar-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; }
+  .chart-bar { width: 100%; border-radius: 4px 4px 0 0; background: #5DCAA5; }
+  .chart-bar-label { font-size: 9.5px; color: var(--color-text-secondary); }
+  .input { width: 100%; padding: 7px 10px; font-size: 13px; border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); background: var(--color-background-primary); color: var(--color-text-primary); }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 14px; }
+  .form-label { font-size: 11px; color: var(--color-text-secondary); margin-bottom: 4px; }
+  .form-group { display: flex; flex-direction: column; }
+  select { width: 100%; padding: 7px 10px; font-size: 13px; border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); background: var(--color-background-primary); color: var(--color-text-primary); }
+  .ai-box { border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); padding: 10px 14px; background: var(--color-background-secondary); font-size: 12.5px; color: var(--color-text-secondary); min-height: 40px; }
+  .fifo-visual { display: flex; gap: 6px; align-items: center; padding: 10px 14px; flex-wrap: wrap; }
+  .fifo-batch { padding: 5px 10px; border-radius: var(--border-radius-md); font-size: 11px; font-weight: 500; text-align: center; min-width: 70px; }
+  .fifo-arrow { color: var(--color-text-secondary); font-size: 14px; }
+</style>
+
+<div class="shell">
+  <div class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-dot" style="color:#fff;font-size:12px;">🧋</div>
+      <span>BobaPOS</span>
+    </div>
+    <div class="nav-item active" onclick="showPage('dashboard',this)">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/><rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>
+      Dashboard
+    </div>
+    <div class="nav-item" onclick="showPage('inventory',this)">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 5h12M2 8h8M2 11h5"/><rect x="1" y="2" width="14" height="12" rx="1.5"/></svg>
+      Inventory
+    </div>
+    <div class="nav-item" onclick="showPage('orders',this)">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3h10l-1.5 7H4.5L3 3z"/><circle cx="6" cy="13.5" r="1"/><circle cx="10" cy="13.5" r="1"/><path d="M1 1h2l1 2"/></svg>
+      Orders
+    </div>
+    <div class="nav-item" onclick="showPage('recipes',this)">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2v12M2 8h12M5 4l6 8M11 4l-6 8"/></svg>
+      Recipes / BOM
+    </div>
+    <div class="nav-item" onclick="showPage('purchasing',this)">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 2h2l2 8h7l1-5H6"/><circle cx="7" cy="13" r="1"/><circle cx="12" cy="13" r="1"/></svg>
+      Purchasing
+    </div>
+    <div class="nav-item" onclick="showPage('profit',this)">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="1,12 5,7 8,10 12,5 15,7"/></svg>
+      Profit & Finance
+    </div>
+    <div class="nav-item" onclick="showPage('platforms',this)">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 2a8 8 0 010 12M2 8h12"/></svg>
+      Platforms
+    </div>
+    <div class="nav-item" onclick="showPage('ai',this)" style="margin-top:auto;">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M6 8h4M8 6v4"/></svg>
+      AI Insights
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <span class="page-title" id="page-title">Daily Dashboard</span>
+      <div class="topbar-right">
+        <span class="badge badge-danger">2 Low Stock</span>
+        <span class="badge badge-warn">1 Near Expiry</span>
+        <span style="font-size:12px;color:var(--color-text-secondary);">23 Apr 2026</span>
+      </div>
+    </div>
+    <div class="content">
+
+      <!-- DASHBOARD -->
+      <div class="page active" id="page-dashboard">
+        <div class="metrics">
+          <div class="metric-card"><div class="metric-label">Today's orders</div><div class="metric-val">47</div><div class="metric-sub">+12% vs yesterday</div></div>
+          <div class="metric-card"><div class="metric-label">Gross revenue</div><div class="metric-val" style="color:#1D9E75;">Rp 2.1M</div><div class="metric-sub">Shopee + Manual</div></div>
+          <div class="metric-card"><div class="metric-label">Net revenue</div><div class="metric-val">Rp 1.74M</div><div class="metric-sub">After platform fees</div></div>
+          <div class="metric-card"><div class="metric-label">Net profit</div><div class="metric-val" style="color:#1D9E75;">Rp 910K</div><div class="metric-sub">Margin 52%</div></div>
+        </div>
+
+        <div class="two-col">
+          <div class="section">
+            <div class="section-head"><span class="section-title">Top products today</span></div>
+            <div style="padding:12px 14px;display:flex;flex-direction:column;gap:10px;">
+              <div style="font-size:12.5px;">
+                <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span>Roasted Milk Tea</span><span style="font-weight:500;">18 cups</span></div>
+                <div style="height:5px;background:var(--color-background-secondary);border-radius:99px;"><div style="height:100%;width:70%;background:#1D9E75;border-radius:99px;"></div></div>
+              </div>
+              <div style="font-size:12.5px;">
+                <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span>Taro Milk Tea</span><span style="font-weight:500;">14 cups</span></div>
+                <div style="height:5px;background:var(--color-background-secondary);border-radius:99px;"><div style="height:100%;width:54%;background:#5DCAA5;border-radius:99px;"></div></div>
+              </div>
+              <div style="font-size:12.5px;">
+                <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span>Brown Sugar Boba</span><span style="font-weight:500;">9 cups</span></div>
+                <div style="height:5px;background:var(--color-background-secondary);border-radius:99px;"><div style="height:100%;width:35%;background:#9FE1CB;border-radius:99px;"></div></div>
+              </div>
+              <div style="font-size:12.5px;">
+                <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span>Matcha Latte</span><span style="font-weight:500;">6 cups</span></div>
+                <div style="height:5px;background:var(--color-background-secondary);border-radius:99px;"><div style="height:100%;width:23%;background:#B4B2A9;border-radius:99px;"></div></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-head"><span class="section-title">Alerts</span></div>
+            <div class="alert-row">
+              <div class="alert-icon" style="background:#FCEBEB;color:#791F1F;">!</div>
+              <div><div class="alert-text">Pearl (tapioca) low stock</div><div class="alert-sub">80g remaining — min 200g. Reorder needed.</div></div>
+            </div>
+            <div class="alert-row">
+              <div class="alert-icon" style="background:#FCEBEB;color:#791F1F;">!</div>
+              <div><div class="alert-text">Brown sugar syrup low stock</div><div class="alert-sub">150ml remaining — min 500ml.</div></div>
+            </div>
+            <div class="alert-row">
+              <div class="alert-icon" style="background:#FAEEDA;color:#633806;">↕</div>
+              <div><div class="alert-text">Fresh milk Batch B002 near expiry</div><div class="alert-sub">Expires in 2 days (25 Apr). Use FIFO — deduct first.</div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-head"><span class="section-title">Weekly revenue</span></div>
+          <div style="padding:14px;">
+            <div class="chart-bars">
+              <div class="chart-bar-wrap"><div class="chart-bar" style="height:55px;"></div><div class="chart-bar-label">Mon</div></div>
+              <div class="chart-bar-wrap"><div class="chart-bar" style="height:70px;background:#1D9E75;"></div><div class="chart-bar-label">Tue</div></div>
+              <div class="chart-bar-wrap"><div class="chart-bar" style="height:48px;"></div><div class="chart-bar-label">Wed</div></div>
+              <div class="chart-bar-wrap"><div class="chart-bar" style="height:82px;background:#1D9E75;"></div><div class="chart-bar-label">Thu</div></div>
+              <div class="chart-bar-wrap"><div class="chart-bar" style="height:90px;background:#0F6E56;"></div><div class="chart-bar-label">Fri</div></div>
+              <div class="chart-bar-wrap"><div class="chart-bar" style="height:78px;background:#5DCAA5;"></div><div class="chart-bar-label">Sat</div></div>
+              <div class="chart-bar-wrap"><div class="chart-bar" style="height:60px;background:#9FE1CB;"></div><div class="chart-bar-label">Sun</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- INVENTORY -->
+      <div class="page" id="page-inventory">
+        <div class="section">
+          <div class="section-head">
+            <span class="section-title">Raw material stock</span>
+            <div style="display:flex;gap:6px;">
+              <button class="btn" onclick="sendPrompt('Which inventory items need restocking urgently and how much should I order?')">AI reorder advice ↗</button>
+              <button class="btn btn-primary">+ Add item</button>
+            </div>
+          </div>
+          <table>
+            <thead><tr><th>Item</th><th>Category</th><th>Unit</th><th>Stock</th><th>Min stock</th><th>Status</th><th>Nearest expiry</th></tr></thead>
+            <tbody>
+              <tr><td>Fresh milk</td><td>Ingredient</td><td>ml</td><td><div class="stock-bar-wrap"><div class="stock-bar" style="width:80%;background:#1D9E75;"></div></div>4,000</td><td>1,000</td><td><span class="badge badge-ok">OK</span></td><td>25 Apr 2026</td></tr>
+              <tr><td>Black tea leaves</td><td>Ingredient</td><td>gram</td><td><div class="stock-bar-wrap"><div class="stock-bar" style="width:60%;background:#1D9E75;"></div></div>600</td><td>200</td><td><span class="badge badge-ok">OK</span></td><td>30 Jun 2026</td></tr>
+              <tr><td>Pearl (tapioca)</td><td>Ingredient</td><td>gram</td><td><div class="stock-bar-wrap"><div class="stock-bar" style="width:15%;background:#E24B4A;"></div></div>80</td><td>200</td><td><span class="badge badge-danger">Low</span></td><td>28 May 2026</td></tr>
+              <tr><td>Brown sugar syrup</td><td>Ingredient</td><td>ml</td><td><div class="stock-bar-wrap"><div class="stock-bar" style="width:20%;background:#E24B4A;"></div></div>150</td><td>500</td><td><span class="badge badge-danger">Low</span></td><td>15 Jun 2026</td></tr>
+              <tr><td>Taro powder</td><td>Ingredient</td><td>gram</td><td><div class="stock-bar-wrap"><div class="stock-bar" style="width:55%;background:#EF9F27;"></div></div>550</td><td>300</td><td><span class="badge badge-ok">OK</span></td><td>31 Aug 2026</td></tr>
+              <tr><td>Sugar</td><td>Ingredient</td><td>gram</td><td><div class="stock-bar-wrap"><div class="stock-bar" style="width:90%;background:#1D9E75;"></div></div>4,500</td><td>500</td><td><span class="badge badge-ok">OK</span></td><td>Dec 2026</td></tr>
+              <tr><td>Cup (16oz)</td><td>Packaging</td><td>pcs</td><td><div class="stock-bar-wrap"><div class="stock-bar" style="width:70%;background:#1D9E75;"></div></div>350</td><td>100</td><td><span class="badge badge-ok">OK</span></td><td>—</td></tr>
+              <tr><td>Dome lid</td><td>Packaging</td><td>pcs</td><td><div class="stock-bar-wrap"><div class="stock-bar" style="width:65%;background:#1D9E75;"></div></div>320</td><td>100</td><td><span class="badge badge-ok">OK</span></td><td>—</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="section">
+          <div class="section-head"><span class="section-title">FIFO batch deduction — how it works</span></div>
+          <div class="fifo-visual">
+            <div class="fifo-batch" style="background:#FCEBEB;color:#791F1F;">B001<br><small>Exp 25 Apr</small><br><small>800ml left</small></div>
+            <div class="fifo-arrow">→</div>
+            <div class="fifo-batch" style="background:#FAEEDA;color:#633806;">B002<br><small>Exp 30 Apr</small><br><small>2000ml</small></div>
+            <div class="fifo-arrow">→</div>
+            <div class="fifo-batch" style="background:#EAF3DE;color:#27500A;">B003<br><small>Exp 10 May</small><br><small>2000ml</small></div>
+            <div style="font-size:11px;color:var(--color-text-secondary);margin-left:8px;">Each order deducts from <strong>earliest expiry first</strong>. B001 is depleted before touching B002.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ORDERS -->
+      <div class="page" id="page-orders">
+        <div class="metrics" style="grid-template-columns:repeat(3,1fr);">
+          <div class="metric-card"><div class="metric-label">Today's orders</div><div class="metric-val">47</div></div>
+          <div class="metric-card"><div class="metric-label">ShopeeFood</div><div class="metric-val">34</div><div class="metric-sub">72% of orders</div></div>
+          <div class="metric-card"><div class="metric-label">Manual (WA/IG)</div><div class="metric-val">13</div><div class="metric-sub">28% of orders</div></div>
+        </div>
+
+        <div class="section">
+          <div class="section-head">
+            <span class="section-title">Recent orders</span>
+            <div style="display:flex;gap:6px;">
+              <select style="font-size:12px;padding:4px 8px;width:auto;"><option>All platforms</option><option>ShopeeFood</option><option>Manual</option></select>
+              <button class="btn btn-primary">+ Manual order</button>
+            </div>
+          </div>
+          <table>
+            <thead><tr><th>Order ID</th><th>Platform</th><th>Items</th><th>Gross</th><th>Platform fee</th><th>Net</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td style="font-family:var(--font-mono);font-size:11px;">#SF-88341</td><td><span class="badge" style="background:#FAEEDA;color:#633806;">Shopee</span></td><td>Roasted MT ×2</td><td>Rp 56,000</td><td>Rp 9,520 (17%)</td><td>Rp 46,480</td><td><span class="order-status status-completed">Completed</span></td></tr>
+              <tr><td style="font-family:var(--font-mono);font-size:11px;">#MN-00293</td><td><span class="badge" style="background:#E1F5EE;color:#085041;">Manual</span></td><td>Taro MT ×1, Pearl ×1</td><td>Rp 38,000</td><td>Rp 0</td><td>Rp 38,000</td><td><span class="order-status status-completed">Completed</span></td></tr>
+              <tr><td style="font-family:var(--font-mono);font-size:11px;">#SF-88342</td><td><span class="badge" style="background:#FAEEDA;color:#633806;">Shopee</span></td><td>Brown Sugar ×3</td><td>Rp 75,000</td><td>Rp 12,750 (17%)</td><td>Rp 62,250</td><td><span class="order-status status-pending">Pending</span></td></tr>
+              <tr><td style="font-family:var(--font-mono);font-size:11px;">#SF-88339</td><td><span class="badge" style="background:#FAEEDA;color:#633806;">Shopee</span></td><td>Matcha Latte ×2</td><td>Rp 52,000</td><td>Rp 8,840 (17%)</td><td>Rp 43,160</td><td><span class="order-status status-cancelled">Cancelled</span></td></tr>
+            </tbody>
+          </table>
+          <div style="padding:8px 14px;font-size:11px;color:var(--color-text-secondary);">Cancelled orders auto-reverse inventory deductions.</div>
+        </div>
+
+        <div class="section">
+          <div class="section-head"><span class="section-title">Order flow</span></div>
+          <div class="flow-steps">
+            <div class="flow-step"><div class="flow-step-num">1</div><div style="font-size:11px;font-weight:500;">Import</div><div class="flow-step-label">Shopee API / Manual</div></div>
+            <div class="flow-step"><div class="flow-step-num">2</div><div style="font-size:11px;font-weight:500;">Platform fee</div><div class="flow-step-label">Gross × commission%</div></div>
+            <div class="flow-step"><div class="flow-step-num">3</div><div style="font-size:11px;font-weight:500;">Stock deduct</div><div class="flow-step-label">FIFO per recipe</div></div>
+            <div class="flow-step"><div class="flow-step-num">4</div><div style="font-size:11px;font-weight:500;">COGS calc</div><div class="flow-step-label">Qty × batch unit cost</div></div>
+            <div class="flow-step"><div class="flow-step-num">5</div><div style="font-size:11px;font-weight:500;">Profit</div><div class="flow-step-label">Net − COGS − pack</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RECIPES -->
+      <div class="page" id="page-recipes">
+        <div class="section">
+          <div class="section-head">
+            <span class="section-title">Bill of materials — recipes</span>
+            <button class="btn btn-primary">+ New recipe</button>
+          </div>
+          <div style="padding:14px;display:flex;flex-direction:column;gap:14px;">
+            <div style="border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);overflow:hidden;">
+              <div style="padding:10px 14px;background:var(--color-background-secondary);display:flex;justify-content:space-between;align-items:center;">
+                <span style="font-size:13px;font-weight:500;">Roasted Milk Tea (large)</span>
+                <span style="font-size:11px;color:var(--color-text-secondary);">COGS: ~Rp 7,200</span>
+              </div>
+              <div style="padding:10px 14px;display:flex;flex-wrap:wrap;gap:4px;">
+                <span class="recipe-chip">Fresh milk 250ml</span>
+                <span class="recipe-chip">Black tea 5g</span>
+                <span class="recipe-chip">Sugar 15g</span>
+                <span class="recipe-chip">Pearl 30g</span>
+                <span class="recipe-chip">Cup 1 pcs</span>
+                <span class="recipe-chip">Dome lid 1 pcs</span>
+                <span class="recipe-chip">Straw 1 pcs</span>
+              </div>
+            </div>
+            <div style="border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);overflow:hidden;">
+              <div style="padding:10px 14px;background:var(--color-background-secondary);display:flex;justify-content:space-between;align-items:center;">
+                <span style="font-size:13px;font-weight:500;">Taro Milk Tea (large)</span>
+                <span style="font-size:11px;color:var(--color-text-secondary);">COGS: ~Rp 8,100</span>
+              </div>
+              <div style="padding:10px 14px;display:flex;flex-wrap:wrap;gap:4px;">
+                <span class="recipe-chip">Fresh milk 200ml</span>
+                <span class="recipe-chip">Taro powder 20g</span>
+                <span class="recipe-chip">Sugar 15g</span>
+                <span class="recipe-chip">Pearl 30g</span>
+                <span class="recipe-chip">Cup 1 pcs</span>
+                <span class="recipe-chip">Dome lid 1 pcs</span>
+              </div>
+            </div>
+            <div style="border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);overflow:hidden;">
+              <div style="padding:10px 14px;background:var(--color-background-secondary);display:flex;justify-content:space-between;align-items:center;">
+                <span style="font-size:13px;font-weight:500;">Brown Sugar Boba</span>
+                <span style="font-size:11px;color:var(--color-text-secondary);">COGS: ~Rp 9,400</span>
+              </div>
+              <div style="padding:10px 14px;display:flex;flex-wrap:wrap;gap:4px;">
+                <span class="recipe-chip">Fresh milk 300ml</span>
+                <span class="recipe-chip">Brown sugar syrup 40ml</span>
+                <span class="recipe-chip">Pearl 50g</span>
+                <span class="recipe-chip">Sugar 5g</span>
+                <span class="recipe-chip">Cup 1 pcs</span>
+                <span class="recipe-chip">Dome lid 1 pcs</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PURCHASING -->
+      <div class="page" id="page-purchasing">
+        <div class="section">
+          <div class="section-head">
+            <span class="section-title">New purchase</span>
+          </div>
+          <div class="form-grid">
+            <div class="form-group"><div class="form-label">Supplier name</div><input class="input" placeholder="e.g. UD Bahan Minuman" /></div>
+            <div class="form-group"><div class="form-label">Purchase date</div><input class="input" type="date" value="2026-04-23" /></div>
+            <div class="form-group"><div class="form-label">Item</div><select><option>Fresh milk</option><option>Black tea leaves</option><option>Pearl (tapioca)</option><option>Brown sugar syrup</option><option>Taro powder</option></select></div>
+            <div class="form-group"><div class="form-label">Quantity (ml / gram / pcs)</div><input class="input" type="number" placeholder="e.g. 5000" /></div>
+            <div class="form-group"><div class="form-label">Unit cost (Rp)</div><input class="input" type="number" placeholder="e.g. 18000" /></div>
+            <div class="form-group"><div class="form-label">Expiry date</div><input class="input" type="date" /></div>
+          </div>
+          <div style="padding:0 14px 14px;"><button class="btn btn-primary">Save & add to batches →</button></div>
+          <div style="padding:8px 14px;border-top:0.5px solid var(--color-border-tertiary);font-size:11px;color:var(--color-text-secondary);">Saving creates an inventory_batch record and updates current_stock + logs an inventory_movement (IN).</div>
+        </div>
+
+        <div class="section">
+          <div class="section-head"><span class="section-title">Recent purchases</span></div>
+          <table>
+            <thead><tr><th>Date</th><th>Supplier</th><th>Item</th><th>Qty</th><th>Unit cost</th><th>Expiry</th><th>Total</th></tr></thead>
+            <tbody>
+              <tr><td>20 Apr</td><td>UD Bahan</td><td>Fresh milk</td><td>5,000ml</td><td>Rp 18/ml</td><td>30 Apr</td><td>Rp 90,000</td></tr>
+              <tr><td>19 Apr</td><td>Pak Agus</td><td>Pearl (tapioca)</td><td>1,000g</td><td>Rp 45/g</td><td>28 May</td><td>Rp 45,000</td></tr>
+              <tr><td>18 Apr</td><td>UD Bahan</td><td>Black tea leaves</td><td>500g</td><td>Rp 80/g</td><td>30 Jun</td><td>Rp 40,000</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- PROFIT -->
+      <div class="page" id="page-profit">
+        <div class="metrics">
+          <div class="metric-card"><div class="metric-label">Gross revenue</div><div class="metric-val">Rp 2.1M</div></div>
+          <div class="metric-card"><div class="metric-label">Platform fees</div><div class="metric-val" style="color:#A32D2D;">−Rp 357K</div></div>
+          <div class="metric-card"><div class="metric-label">COGS</div><div class="metric-val" style="color:#A32D2D;">−Rp 430K</div></div>
+          <div class="metric-card"><div class="metric-label">Net profit</div><div class="metric-val" style="color:#1D9E75;">Rp 910K</div></div>
+        </div>
+
+        <div class="section">
+          <div class="section-head"><span class="section-title">Profit breakdown — today's orders</span></div>
+          <div style="padding:14px;">
+            <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--color-text-secondary);margin-bottom:4px;">
+              <span>Revenue</span><span>Platform fee</span><span>COGS</span><span>Packaging</span><span>Profit</span>
+            </div>
+            <div class="profit-bar">
+              <div class="pb-seg" style="width:43%;background:#1D9E75;"></div>
+              <div class="pb-seg" style="width:17%;background:#E24B4A;"></div>
+              <div class="pb-seg" style="width:20%;background:#EF9F27;"></div>
+              <div class="pb-seg" style="width:7%;background:#B4B2A9;"></div>
+              <div class="pb-seg" style="flex:1;background:#9FE1CB;"></div>
+            </div>
+            <div class="legend-row">
+              <span><span class="legend-dot" style="background:#1D9E75;"></span>Net revenue Rp 1.74M</span>
+              <span><span class="legend-dot" style="background:#E24B4A;"></span>Platform fee Rp 357K</span>
+              <span><span class="legend-dot" style="background:#EF9F27;"></span>COGS Rp 430K</span>
+              <span><span class="legend-dot" style="background:#B4B2A9;"></span>Packaging Rp 153K</span>
+              <span><span class="legend-dot" style="background:#9FE1CB;"></span>Profit Rp 910K</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-head"><span class="section-title">Profit per menu</span></div>
+          <table>
+            <thead><tr><th>Product</th><th>Sale price</th><th>COGS</th><th>Packaging</th><th>Shopee net</th><th>Margin</th></tr></thead>
+            <tbody>
+              <tr><td>Roasted Milk Tea</td><td>Rp 28,000</td><td>Rp 7,200</td><td>Rp 1,500</td><td>Rp 23,240</td><td style="color:#1D9E75;font-weight:500;">52%</td></tr>
+              <tr><td>Taro Milk Tea</td><td>Rp 28,000</td><td>Rp 8,100</td><td>Rp 1,500</td><td>Rp 23,240</td><td style="color:#1D9E75;font-weight:500;">58%</td></tr>
+              <tr><td>Brown Sugar Boba</td><td>Rp 25,000</td><td>Rp 9,400</td><td>Rp 1,500</td><td>Rp 20,750</td><td style="color:#EF9F27;font-weight:500;">46%</td></tr>
+              <tr><td>Matcha Latte</td><td>Rp 26,000</td><td>Rp 8,800</td><td>Rp 1,500</td><td>Rp 21,580</td><td style="color:#EF9F27;font-weight:500;">51%</td></tr>
+            </tbody>
+          </table>
+          <div style="padding:8px 14px;"><button class="btn" onclick="sendPrompt('Analyze my milk tea menu profitability and suggest which products to promote or reprice.')">AI margin analysis ↗</button></div>
+        </div>
+      </div>
+
+      <!-- PLATFORMS -->
+      <div class="page" id="page-platforms">
+        <div class="section">
+          <div class="section-head"><span class="section-title">Platform configuration</span><button class="btn btn-primary">+ Add platform</button></div>
+          <div class="platform-row">
+            <div style="width:32px;height:32px;border-radius:8px;background:#FAEEDA;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500;color:#633806;">SF</div>
+            <div class="platform-name">ShopeeFood<br><span style="font-size:11px;color:var(--color-text-secondary);">API sync · Webhook available</span></div>
+            <div class="platform-stat"><div class="val">17%</div><div class="lbl">Commission</div></div>
+            <div class="platform-stat"><div class="val">Rp 0</div><div class="lbl">Fixed fee</div></div>
+            <div class="platform-stat"><div class="val">34</div><div class="lbl">Orders today</div></div>
+            <span class="badge badge-ok" style="margin-left:8px;">Active</span>
+          </div>
+          <div class="platform-row">
+            <div style="width:32px;height:32px;border-radius:8px;background:#E1F5EE;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500;color:#085041;">WA</div>
+            <div class="platform-name">WhatsApp / IG Manual<br><span style="font-size:11px;color:var(--color-text-secondary);">Manual entry · No fee</span></div>
+            <div class="platform-stat"><div class="val">0%</div><div class="lbl">Commission</div></div>
+            <div class="platform-stat"><div class="val">Rp 0</div><div class="lbl">Fixed fee</div></div>
+            <div class="platform-stat"><div class="val">13</div><div class="lbl">Orders today</div></div>
+            <span class="badge badge-ok" style="margin-left:8px;">Active</span>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-head"><span class="section-title">ShopeeFood API sync settings</span></div>
+          <div class="form-grid">
+            <div class="form-group"><div class="form-label">Sync strategy</div><select><option>Cron (every 10 min)</option><option>Webhook (recommended)</option></select></div>
+            <div class="form-group"><div class="form-label">Endpoints used</div><input class="input" value="get_order_list, get_order_detail, get_escrow_detail" readonly /></div>
+          </div>
+          <div style="padding:0 14px 14px;font-size:11px;color:var(--color-text-secondary);">Shopee order_id → orders.external_id · item_name → product_name · commission → platform_fee</div>
+        </div>
+      </div>
+
+      <!-- AI INSIGHTS -->
+      <div class="page" id="page-ai">
+        <div class="section">
+          <div class="section-head"><span class="section-title">AI business insights</span></div>
+          <div style="padding:14px;display:flex;flex-direction:column;gap:10px;">
+            <button class="btn" style="text-align:left;padding:10px 14px;" onclick="sendPrompt('Based on my milk tea shop inventory and sales data, which items are at risk of spoilage this week and what should I do?')">
+              Which ingredients are at spoilage risk this week? ↗
+            </button>
+            <button class="btn" style="text-align:left;padding:10px 14px;" onclick="sendPrompt('Analyze my milk tea shop profit margins per product and suggest pricing changes to maximize profitability.')">
+              Which products should I reprice to improve margins? ↗
+            </button>
+            <button class="btn" style="text-align:left;padding:10px 14px;" onclick="sendPrompt('My milk tea shop uses FIFO batch tracking. Explain how I should train my staff to follow FIFO during production.')">
+              How do I train staff on FIFO inventory? ↗
+            </button>
+            <button class="btn" style="text-align:left;padding:10px 14px;" onclick="sendPrompt('What are best practices for integrating ShopeeFood API orders with an inventory management system to avoid stock discrepancies?')">
+              ShopeeFood API integration best practices ↗
+            </button>
+            <button class="btn" style="text-align:left;padding:10px 14px;" onclick="sendPrompt('Help me design the Firestore data structure for a milk tea shop with inventory batches, FIFO deduction, and profit tracking.')">
+              Design the Firestore schema for this system ↗
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+const pages = { dashboard: 'Daily Dashboard', inventory: 'Inventory', orders: 'Orders', recipes: 'Recipes / BOM', purchasing: 'Purchasing', profit: 'Profit & Finance', platforms: 'Platforms', ai: 'AI Insights' };
+function showPage(id, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  el.classList.add('active');
+  document.getElementById('page-title').textContent = pages[id];
+}
+</script>
