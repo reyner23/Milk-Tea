@@ -1,139 +1,264 @@
+bash
 
-<h2 class="sr-only">Milk Tea Online Shop Management System — full dashboard prototype with inventory, orders, recipes, purchasing, and profit tracking.</h2>
+cat > /mnt/user-data/outputs/boba-pos.html << 'HTMLEOF'
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>BobaPOS — Rosti Milk Tea</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: var(--font-sans); color: var(--color-text-primary); }
-  .shell { display: flex; min-height: 620px; border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); overflow: hidden; background: var(--color-background-primary); }
-  .sidebar { width: 188px; flex-shrink: 0; border-right: 0.5px solid var(--color-border-tertiary); background: var(--color-background-secondary); padding: 16px 0; display: flex; flex-direction: column; gap: 2px; }
-  .sidebar-brand { padding: 0 16px 14px; font-size: 14px; font-weight: 500; border-bottom: 0.5px solid var(--color-border-tertiary); margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
-  .brand-dot { width: 20px; height: 20px; border-radius: 50%; background: #1D9E75; display: flex; align-items: center; justify-content: center; }
-  .nav-item { display: flex; align-items: center; gap: 9px; padding: 8px 16px; font-size: 13px; cursor: pointer; color: var(--color-text-secondary); border-radius: 0; transition: all 0.12s; }
-  .nav-item:hover { background: var(--color-background-primary); color: var(--color-text-primary); }
-  .nav-item.active { background: var(--color-background-primary); color: var(--color-text-primary); font-weight: 500; border-left: 2px solid #1D9E75; }
-  .nav-icon { width: 15px; height: 15px; flex-shrink: 0; }
-  .main { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
-  .topbar { padding: 14px 20px; border-bottom: 0.5px solid var(--color-border-tertiary); display: flex; align-items: center; justify-content: space-between; }
-  .page-title { font-size: 15px; font-weight: 500; }
-  .topbar-right { display: flex; align-items: center; gap: 8px; }
-  .badge { font-size: 11px; padding: 3px 8px; border-radius: 99px; font-weight: 500; }
-  .badge-warn { background: #FAEEDA; color: #633806; }
-  .badge-danger { background: #FCEBEB; color: #791F1F; }
-  .badge-ok { background: #EAF3DE; color: #27500A; }
-  .content { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
-  .page { display: none; flex-direction: column; gap: 16px; }
-  .page.active { display: flex; }
-  .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-  .metric-card { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 12px 14px; }
-  .metric-label { font-size: 11px; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px; }
-  .metric-val { font-size: 22px; font-weight: 500; }
-  .metric-sub { font-size: 11px; color: var(--color-text-secondary); margin-top: 2px; }
-  .section { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); overflow: hidden; }
-  .section-head { padding: 12px 16px; border-bottom: 0.5px solid var(--color-border-tertiary); display: flex; align-items: center; justify-content: space-between; }
-  .section-title { font-size: 13px; font-weight: 500; }
-  .btn { font-size: 12px; padding: 5px 12px; border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); background: transparent; color: var(--color-text-primary); cursor: pointer; }
-  .btn:hover { background: var(--color-background-secondary); }
-  .btn-primary { background: #1D9E75; color: #fff; border-color: #0F6E56; }
-  .btn-primary:hover { background: #0F6E56; }
-  table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
-  th { text-align: left; padding: 8px 14px; font-size: 11px; font-weight: 500; color: var(--color-text-secondary); border-bottom: 0.5px solid var(--color-border-tertiary); background: var(--color-background-secondary); }
-  td { padding: 9px 14px; border-bottom: 0.5px solid var(--color-border-tertiary); color: var(--color-text-primary); }
-  tr:last-child td { border-bottom: none; }
-  tr:hover td { background: var(--color-background-secondary); }
-  .stock-bar-wrap { width: 80px; height: 5px; background: var(--color-background-secondary); border-radius: 99px; overflow: hidden; display: inline-block; vertical-align: middle; margin-right: 6px; }
-  .stock-bar { height: 100%; border-radius: 99px; }
-  .alert-row { display: flex; align-items: flex-start; gap: 10px; padding: 10px 14px; border-bottom: 0.5px solid var(--color-border-tertiary); }
-  .alert-row:last-child { border-bottom: none; }
-  .alert-icon { width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 500; flex-shrink: 0; margin-top: 1px; }
-  .alert-text { font-size: 12.5px; }
-  .alert-sub { font-size: 11px; color: var(--color-text-secondary); margin-top: 2px; }
-  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-  .recipe-chip { display: inline-flex; align-items: center; gap: 4px; background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 3px 8px; font-size: 11px; color: var(--color-text-secondary); margin: 2px; }
-  .platform-row { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-bottom: 0.5px solid var(--color-border-tertiary); }
-  .platform-row:last-child { border-bottom: none; }
-  .platform-name { font-size: 13px; font-weight: 500; flex: 1; }
-  .platform-stat { text-align: right; }
-  .platform-stat .val { font-size: 13px; font-weight: 500; }
-  .platform-stat .lbl { font-size: 10px; color: var(--color-text-secondary); }
-  .flow-steps { display: flex; gap: 0; overflow: hidden; }
-  .flow-step { flex: 1; padding: 10px 12px; background: var(--color-background-secondary); text-align: center; position: relative; font-size: 11px; }
-  .flow-step + .flow-step::before { content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 0; height: 0; border-top: 10px solid transparent; border-bottom: 10px solid transparent; border-left: 8px solid var(--color-background-primary); }
-  .flow-step-num { width: 18px; height: 18px; border-radius: 50%; background: #1D9E75; color: #fff; font-size: 10px; font-weight: 500; display: flex; align-items: center; justify-content: center; margin: 0 auto 4px; }
-  .flow-step-label { color: var(--color-text-secondary); font-size: 10.5px; }
-  .tabs { display: flex; gap: 0; border-bottom: 0.5px solid var(--color-border-tertiary); }
-  .tab { padding: 9px 16px; font-size: 12.5px; cursor: pointer; color: var(--color-text-secondary); border-bottom: 2px solid transparent; }
-  .tab.active { color: var(--color-text-primary); border-bottom-color: #1D9E75; font-weight: 500; }
-  .tab-content { display: none; }
-  .tab-content.active { display: block; }
-  .profit-bar { display: flex; height: 6px; border-radius: 99px; overflow: hidden; gap: 1px; margin: 6px 0; }
-  .pb-seg { height: 100%; border-radius: 0; }
-  .legend-row { display: flex; gap: 12px; font-size: 10.5px; color: var(--color-text-secondary); flex-wrap: wrap; }
-  .legend-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; }
-  .order-status { font-size: 11px; padding: 2px 7px; border-radius: 99px; font-weight: 500; }
-  .status-completed { background: #EAF3DE; color: #27500A; }
-  .status-pending { background: #FAEEDA; color: #633806; }
-  .status-cancelled { background: #FCEBEB; color: #791F1F; }
-  .chart-bars { display: flex; align-items: flex-end; gap: 6px; height: 90px; }
-  .chart-bar-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; }
-  .chart-bar { width: 100%; border-radius: 4px 4px 0 0; background: #5DCAA5; }
-  .chart-bar-label { font-size: 9.5px; color: var(--color-text-secondary); }
-  .input { width: 100%; padding: 7px 10px; font-size: 13px; border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); background: var(--color-background-primary); color: var(--color-text-primary); }
-  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 14px; }
-  .form-label { font-size: 11px; color: var(--color-text-secondary); margin-bottom: 4px; }
-  .form-group { display: flex; flex-direction: column; }
-  select { width: 100%; padding: 7px 10px; font-size: 13px; border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); background: var(--color-background-primary); color: var(--color-text-primary); }
-  .ai-box { border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); padding: 10px 14px; background: var(--color-background-secondary); font-size: 12.5px; color: var(--color-text-secondary); min-height: 40px; }
-  .fifo-visual { display: flex; gap: 6px; align-items: center; padding: 10px 14px; flex-wrap: wrap; }
-  .fifo-batch { padding: 5px 10px; border-radius: var(--border-radius-md); font-size: 11px; font-weight: 500; text-align: center; min-width: 70px; }
-  .fifo-arrow { color: var(--color-text-secondary); font-size: 14px; }
+:root{--bg0:#0d0f12;--bg1:#13161b;--bg2:#1a1e25;--bg3:#222730;--bg4:#2a3040;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);--text1:#eef0f4;--text2:#8b929e;--text3:#555d6b;--accent:#1fc98a;--accent2:#0fa36d;--accent3:#157a52;--warn:#f4a61d;--danger:#e85b5b;--info:#4fa8e8;--font:'Syne',sans-serif;--mono:'DM Mono',monospace;--radius:10px;--radius-sm:6px;--radius-lg:14px;--shadow:0 2px 16px rgba(0,0,0,0.4)}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg0);color:var(--text1);font-family:var(--font);font-size:14px;overflow:hidden}
+.shell{display:flex;height:100vh}
+.sidebar{width:210px;flex-shrink:0;background:var(--bg1);border-right:1px solid var(--border);display:flex;flex-direction:column}
+.brand{padding:20px 18px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.brand-icon{width:32px;height:32px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.brand-name{font-size:15px;font-weight:700;color:var(--text1);letter-spacing:-0.02em}
+.brand-sub{font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:1px}
+.nav{flex:1;padding:10px 0;overflow-y:auto}
+.nav-section{padding:14px 18px 6px;font-size:9px;font-weight:600;color:var(--text3);letter-spacing:.1em;text-transform:uppercase;font-family:var(--mono)}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 18px;font-size:13px;cursor:pointer;color:var(--text2);border-left:2px solid transparent;transition:all .15s;user-select:none}
+.nav-item:hover{background:var(--bg2);color:var(--text1)}
+.nav-item.active{background:rgba(31,201,138,.08);color:var(--accent);border-left-color:var(--accent);font-weight:500}
+.nav-item svg{width:15px;height:15px;flex-shrink:0;opacity:.7}
+.nav-item.active svg{opacity:1}
+.sidebar-footer{padding:14px 18px;border-top:1px solid var(--border)}
+.conn-status{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--text3);font-family:var(--mono)}
+.conn-dot{width:6px;height:6px;border-radius:50%;background:var(--danger);transition:background .3s}
+.conn-dot.ok{background:var(--accent)}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bg0)}
+.topbar{padding:0 24px;height:56px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:var(--bg1)}
+.page-title{font-size:16px;font-weight:600;letter-spacing:-0.02em}
+.topbar-right{display:flex;align-items:center;gap:8px}
+.badge{font-size:10px;padding:3px 8px;border-radius:99px;font-weight:600;font-family:var(--mono);letter-spacing:.02em}
+.badge-warn{background:rgba(244,166,29,.15);color:var(--warn);border:1px solid rgba(244,166,29,.25)}
+.badge-danger{background:rgba(232,91,91,.15);color:var(--danger);border:1px solid rgba(232,91,91,.25)}
+.badge-ok{background:rgba(31,201,138,.12);color:var(--accent);border:1px solid rgba(31,201,138,.2)}
+.badge-info{background:rgba(79,168,232,.12);color:var(--info);border:1px solid rgba(79,168,232,.2)}
+.plat-sf{background:rgba(244,166,29,.1);color:var(--warn);border:1px solid rgba(244,166,29,.2)}
+.plat-manual{background:rgba(79,168,232,.1);color:var(--info);border:1px solid rgba(79,168,232,.2)}
+.content{flex:1;overflow-y:auto;padding:24px;display:flex;flex-direction:column;gap:20px}
+.page{display:none;flex-direction:column;gap:20px;animation:fadein .2s ease}
+.page.active{display:flex}
+@keyframes fadein{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.metric-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px}
+.metric-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;font-family:var(--mono);margin-bottom:6px}
+.metric-val{font-size:24px;font-weight:700;letter-spacing:-0.03em}
+.metric-sub{font-size:10px;color:var(--text3);margin-top:4px;font-family:var(--mono)}
+.green{color:var(--accent)}.red{color:var(--danger)}
+.section{background:var(--bg1);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden}
+.section-head{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.section-title{font-size:13px;font-weight:600;letter-spacing:-0.01em}
+.btn{font-size:12px;padding:7px 14px;border:1px solid var(--border2);border-radius:var(--radius-sm);background:transparent;color:var(--text1);cursor:pointer;font-family:var(--font);font-weight:500;transition:all .15s;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.btn:hover{background:var(--bg3)}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:var(--accent);color:#000;border-color:var(--accent2);font-weight:600}
+.btn-primary:hover{background:var(--accent2)}
+.btn-danger{background:rgba(232,91,91,.15);color:var(--danger);border-color:rgba(232,91,91,.3)}
+.btn-sm{font-size:11px;padding:4px 10px}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{text-align:left;padding:9px 16px;font-size:10px;font-weight:600;color:var(--text3);border-bottom:1px solid var(--border);background:var(--bg2);letter-spacing:.06em;text-transform:uppercase;font-family:var(--mono)}
+td{padding:10px 16px;border-bottom:1px solid var(--border);color:var(--text1);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:rgba(255,255,255,.02)}
+.mono{font-family:var(--mono);font-size:11px;color:var(--text2)}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:18px}
+.form-group{display:flex;flex-direction:column;gap:5px}
+.form-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;font-family:var(--mono)}
+.form-group.full{grid-column:1/-1}
+input,select,textarea{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-sm);color:var(--text1);font-size:13px;padding:8px 12px;font-family:var(--font);width:100%;transition:border-color .15s;outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(31,201,138,.12)}
+select option{background:var(--bg2)}
+input::placeholder,textarea::placeholder{color:var(--text3)}
+.stock-bar-wrap{width:72px;height:4px;background:var(--bg3);border-radius:99px;overflow:hidden;display:inline-block;vertical-align:middle;margin-right:7px}
+.stock-bar{height:100%;border-radius:99px}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;align-items:center;justify-content:center;z-index:1000;backdrop-filter:blur(3px)}
+.modal-overlay.open{display:flex}
+.modal{background:var(--bg1);border:1px solid var(--border2);border-radius:var(--radius-lg);width:500px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow);animation:fadein .18s ease}
+.modal-head{padding:18px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.modal-title{font-size:15px;font-weight:600}
+.modal-close{background:none;border:none;color:var(--text2);cursor:pointer;font-size:20px;padding:2px 8px;border-radius:4px;line-height:1}
+.modal-close:hover{background:var(--bg3);color:var(--text1)}
+.modal-body{padding:20px;display:flex;flex-direction:column;gap:12px}
+.modal-footer{padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end}
+.alert-row{display:flex;align-items:flex-start;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border)}
+.alert-row:last-child{border-bottom:none}
+.alert-icon{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:1px}
+.alert-text{font-size:12.5px;font-weight:500}
+.alert-sub{font-size:11px;color:var(--text2);margin-top:3px;font-family:var(--mono)}
+.toast{position:fixed;bottom:24px;right:24px;background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius);padding:12px 18px;font-size:13px;display:none;align-items:center;gap:10px;box-shadow:var(--shadow);z-index:2000;animation:fadein .2s ease;max-width:340px}
+.toast.show{display:flex}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.profit-bar{display:flex;height:8px;border-radius:99px;overflow:hidden;gap:1px;margin:8px 0}
+.legend-row{display:flex;gap:14px;font-size:10px;color:var(--text2);flex-wrap:wrap;font-family:var(--mono)}
+.legend-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:middle}
+.flow-steps{display:flex;padding:16px;gap:0}
+.flow-step{flex:1;text-align:center;position:relative;padding:12px 8px}
+.flow-step+.flow-step::before{content:'→';position:absolute;left:-6px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:16px}
+.flow-step-num{width:22px;height:22px;border-radius:50%;background:var(--accent3);color:#fff;font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;margin:0 auto 6px}
+.flow-step-title{font-size:11px;font-weight:600;color:var(--text1)}
+.flow-step-sub{font-size:10px;color:var(--text3);margin-top:3px;font-family:var(--mono)}
+.loading{display:flex;align-items:center;justify-content:center;padding:40px;color:var(--text3);font-family:var(--mono);font-size:12px;gap:8px}
+.spinner{width:16px;height:16px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.recipe-chip{display:inline-flex;align-items:center;gap:4px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:3px 9px;font-size:11px;color:var(--text2);margin:2px;font-family:var(--mono)}
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;color:var(--text3);gap:8px;font-family:var(--mono);font-size:12px}
+.empty-icon{font-size:32px;opacity:.3}
+.order-status{font-size:10px;padding:3px 8px;border-radius:99px;font-weight:600;font-family:var(--mono)}
+.status-completed{background:rgba(31,201,138,.12);color:var(--accent)}
+.status-pending{background:rgba(244,166,29,.12);color:var(--warn)}
+.status-cancelled{background:rgba(232,91,91,.12);color:var(--danger)}
+.chart-bars{display:flex;align-items:flex-end;gap:6px;height:100px}
+.chart-bar-wrap{display:flex;flex-direction:column;align-items:center;gap:5px;flex:1}
+.chart-bar{width:100%;border-radius:4px 4px 0 0;min-height:4px}
+.chart-bar-label{font-size:10px;color:var(--text3);font-family:var(--mono)}
+.chart-bar-val{font-size:9px;color:var(--text2);font-family:var(--mono)}
+.fifo-visual{display:flex;gap:8px;align-items:center;padding:14px 16px;flex-wrap:wrap}
+.fifo-batch{padding:8px 12px;border-radius:var(--radius-sm);font-size:11px;font-weight:500;text-align:center;min-width:80px;font-family:var(--mono);border:1px solid}
+.fifo-arr{color:var(--text3);font-size:16px}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:99px}
+.ingredient-row{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.ingredient-row select{flex:3}
+.ingredient-row input{flex:1}
 </style>
+</head>
+<body>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="modal-inventory">
+  <div class="modal">
+    <div class="modal-head"><span class="modal-title">Add inventory item</span><button class="modal-close" id="close-modal-inventory">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group"><div class="form-label">Item name</div><input id="inv-name" placeholder="e.g. Fresh Milk"/></div>
+      <div class="form-group"><div class="form-label">Category</div><select id="inv-category"><option value="ingredient">Ingredient</option><option value="packaging">Packaging</option></select></div>
+      <div class="form-group"><div class="form-label">Unit</div><select id="inv-unit"><option value="ml">ml</option><option value="gram">gram</option><option value="pcs">pcs</option></select></div>
+      <div class="form-group"><div class="form-label">Initial stock</div><input id="inv-stock" type="number" placeholder="e.g. 5000"/></div>
+      <div class="form-group"><div class="form-label">Min stock (alert threshold)</div><input id="inv-min" type="number" placeholder="e.g. 500"/></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" id="cancel-inv">Cancel</button>
+      <button class="btn btn-primary" id="submit-inv">Save item</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-order">
+  <div class="modal">
+    <div class="modal-head"><span class="modal-title">New manual order</span><button class="modal-close" id="close-modal-order">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group"><div class="form-label">Customer name</div><input id="ord-customer" placeholder="e.g. Budi Santoso"/></div>
+      <div class="form-group"><div class="form-label">Platform</div>
+        <select id="ord-platform"><option value="Manual">WhatsApp / IG (Manual)</option><option value="ShopeeFood">ShopeeFood</option></select>
+      </div>
+      <div>
+        <div class="form-label" style="margin-bottom:8px;">Order items</div>
+        <div id="ord-items-list"></div>
+        <button class="btn btn-sm" id="add-order-item-btn" style="margin-top:6px;">+ Add item</button>
+      </div>
+      <div class="form-group"><div class="form-label">Notes</div><input id="ord-notes" placeholder="Special request..."/></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" id="cancel-order">Cancel</button>
+      <button class="btn btn-primary" id="submit-order">Place order & deduct stock</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-purchase">
+  <div class="modal">
+    <div class="modal-head"><span class="modal-title">Record purchase</span><button class="modal-close" id="close-modal-purchase">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group"><div class="form-label">Supplier name</div><input id="pur-supplier" placeholder="e.g. UD Bahan Minuman"/></div>
+      <div class="form-group"><div class="form-label">Item</div><select id="pur-item"></select></div>
+      <div class="form-group"><div class="form-label">Quantity</div><input id="pur-qty" type="number" placeholder="e.g. 5000"/></div>
+      <div class="form-group"><div class="form-label">Unit cost (Rp per unit)</div><input id="pur-unit-cost" type="number" placeholder="e.g. 18"/></div>
+      <div class="form-group"><div class="form-label">Expiry date</div><input id="pur-expiry" type="date"/></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" id="cancel-purchase">Cancel</button>
+      <button class="btn btn-primary" id="submit-purchase">Save & add to batches</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-recipe">
+  <div class="modal">
+    <div class="modal-head"><span class="modal-title">New recipe / BOM</span><button class="modal-close" id="close-modal-recipe">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group"><div class="form-label">Product name</div><input id="rec-name" placeholder="e.g. Roasted Milk Tea (Large)"/></div>
+      <div class="form-group"><div class="form-label">Selling price (Rp)</div><input id="rec-price" type="number" placeholder="e.g. 28000"/></div>
+      <div>
+        <div class="form-label" style="margin-bottom:8px;">Ingredients</div>
+        <div id="rec-items-list"></div>
+        <button class="btn btn-sm" id="add-recipe-item-btn" style="margin-top:6px;">+ Add ingredient</button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" id="cancel-recipe">Cancel</button>
+      <button class="btn btn-primary" id="submit-recipe">Save recipe</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><span id="toast-icon">✓</span><span id="toast-msg">Saved</span></div>
 
 <div class="shell">
   <div class="sidebar">
-    <div class="sidebar-brand">
-      <div class="brand-dot" style="color:#fff;font-size:12px;">🧋</div>
-      <span>BobaPOS</span>
+    <div class="brand">
+      <div class="brand-icon">🧋</div>
+      <div><div class="brand-name">BobaPOS</div><div class="brand-sub">Rosti Milk Tea</div></div>
     </div>
-    <div class="nav-item active" onclick="showPage('dashboard',this)">
-      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/><rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>
-      Dashboard
-    </div>
-    <div class="nav-item" onclick="showPage('inventory',this)">
-      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 5h12M2 8h8M2 11h5"/><rect x="1" y="2" width="14" height="12" rx="1.5"/></svg>
-      Inventory
-    </div>
-    <div class="nav-item" onclick="showPage('orders',this)">
-      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3h10l-1.5 7H4.5L3 3z"/><circle cx="6" cy="13.5" r="1"/><circle cx="10" cy="13.5" r="1"/><path d="M1 1h2l1 2"/></svg>
-      Orders
-    </div>
-    <div class="nav-item" onclick="showPage('recipes',this)">
-      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2v12M2 8h12M5 4l6 8M11 4l-6 8"/></svg>
-      Recipes / BOM
-    </div>
-    <div class="nav-item" onclick="showPage('purchasing',this)">
-      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 2h2l2 8h7l1-5H6"/><circle cx="7" cy="13" r="1"/><circle cx="12" cy="13" r="1"/></svg>
-      Purchasing
-    </div>
-    <div class="nav-item" onclick="showPage('profit',this)">
-      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="1,12 5,7 8,10 12,5 15,7"/></svg>
-      Profit & Finance
-    </div>
-    <div class="nav-item" onclick="showPage('platforms',this)">
-      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 2a8 8 0 010 12M2 8h12"/></svg>
-      Platforms
-    </div>
-    <div class="nav-item" onclick="showPage('ai',this)" style="margin-top:auto;">
-      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M6 8h4M8 6v4"/></svg>
-      AI Insights
+    <nav class="nav">
+      <div class="nav-section">Main</div>
+      <div class="nav-item active" data-page="dashboard">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/><rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>
+        Dashboard
+      </div>
+      <div class="nav-item" data-page="orders">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3h10l-1.5 7H4.5L3 3z"/><circle cx="6" cy="13.5" r="1"/><circle cx="10" cy="13.5" r="1"/></svg>
+        Orders
+      </div>
+      <div class="nav-section">Stock</div>
+      <div class="nav-item" data-page="inventory">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 5h12M2 8h8M2 11h5"/><rect x="1" y="2" width="14" height="12" rx="1.5"/></svg>
+        Inventory
+      </div>
+      <div class="nav-item" data-page="purchasing">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 2h2l2 8h7l1-5H6"/><circle cx="7" cy="13" r="1"/><circle cx="12" cy="13" r="1"/></svg>
+        Purchasing
+      </div>
+      <div class="nav-item" data-page="recipes">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="7" r="4"/><path d="M8 3v4l2 2"/><path d="M5 13h6"/></svg>
+        Recipes / BOM
+      </div>
+      <div class="nav-section">Finance</div>
+      <div class="nav-item" data-page="profit">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="1,12 5,7 8,10 12,5 15,7"/></svg>
+        Profit & Finance
+      </div>
+      <div class="nav-item" data-page="platforms">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 2a8 8 0 010 12M2 8h12"/></svg>
+        Platforms
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="conn-status"><div class="conn-dot" id="conn-dot"></div><span id="conn-label">Connecting...</span></div>
     </div>
   </div>
 
   <div class="main">
     <div class="topbar">
-      <span class="page-title" id="page-title">Daily Dashboard</span>
+      <span class="page-title" id="page-title">Dashboard</span>
       <div class="topbar-right">
-        <span class="badge badge-danger">2 Low Stock</span>
-        <span class="badge badge-warn">1 Near Expiry</span>
-        <span style="font-size:12px;color:var(--color-text-secondary);">23 Apr 2026</span>
+        <span class="badge badge-danger" id="alert-low-stock" style="display:none;"></span>
+        <span class="badge badge-warn" id="alert-expiry" style="display:none;"></span>
+        <span style="font-size:11px;color:var(--text3);font-family:var(--mono);" id="today-date"></span>
       </div>
     </div>
     <div class="content">
@@ -141,64 +266,49 @@
       <!-- DASHBOARD -->
       <div class="page active" id="page-dashboard">
         <div class="metrics">
-          <div class="metric-card"><div class="metric-label">Today's orders</div><div class="metric-val">47</div><div class="metric-sub">+12% vs yesterday</div></div>
-          <div class="metric-card"><div class="metric-label">Gross revenue</div><div class="metric-val" style="color:#1D9E75;">Rp 2.1M</div><div class="metric-sub">Shopee + Manual</div></div>
-          <div class="metric-card"><div class="metric-label">Net revenue</div><div class="metric-val">Rp 1.74M</div><div class="metric-sub">After platform fees</div></div>
-          <div class="metric-card"><div class="metric-label">Net profit</div><div class="metric-val" style="color:#1D9E75;">Rp 910K</div><div class="metric-sub">Margin 52%</div></div>
+          <div class="metric-card"><div class="metric-label">Today's orders</div><div class="metric-val" id="dash-orders">—</div></div>
+          <div class="metric-card"><div class="metric-label">Gross revenue</div><div class="metric-val green" id="dash-gross">—</div></div>
+          <div class="metric-card"><div class="metric-label">Net revenue</div><div class="metric-val" id="dash-net">—</div></div>
+          <div class="metric-card"><div class="metric-label">Net profit</div><div class="metric-val green" id="dash-profit">—</div></div>
         </div>
-
         <div class="two-col">
           <div class="section">
-            <div class="section-head"><span class="section-title">Top products today</span></div>
-            <div style="padding:12px 14px;display:flex;flex-direction:column;gap:10px;">
-              <div style="font-size:12.5px;">
-                <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span>Roasted Milk Tea</span><span style="font-weight:500;">18 cups</span></div>
-                <div style="height:5px;background:var(--color-background-secondary);border-radius:99px;"><div style="height:100%;width:70%;background:#1D9E75;border-radius:99px;"></div></div>
-              </div>
-              <div style="font-size:12.5px;">
-                <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span>Taro Milk Tea</span><span style="font-weight:500;">14 cups</span></div>
-                <div style="height:5px;background:var(--color-background-secondary);border-radius:99px;"><div style="height:100%;width:54%;background:#5DCAA5;border-radius:99px;"></div></div>
-              </div>
-              <div style="font-size:12.5px;">
-                <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span>Brown Sugar Boba</span><span style="font-weight:500;">9 cups</span></div>
-                <div style="height:5px;background:var(--color-background-secondary);border-radius:99px;"><div style="height:100%;width:35%;background:#9FE1CB;border-radius:99px;"></div></div>
-              </div>
-              <div style="font-size:12.5px;">
-                <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span>Matcha Latte</span><span style="font-weight:500;">6 cups</span></div>
-                <div style="height:5px;background:var(--color-background-secondary);border-radius:99px;"><div style="height:100%;width:23%;background:#B4B2A9;border-radius:99px;"></div></div>
-              </div>
-            </div>
+            <div class="section-head"><span class="section-title">Top products</span></div>
+            <div id="dash-products" style="padding:14px;"><div class="loading"><div class="spinner"></div>Loading...</div></div>
           </div>
-
           <div class="section">
             <div class="section-head"><span class="section-title">Alerts</span></div>
-            <div class="alert-row">
-              <div class="alert-icon" style="background:#FCEBEB;color:#791F1F;">!</div>
-              <div><div class="alert-text">Pearl (tapioca) low stock</div><div class="alert-sub">80g remaining — min 200g. Reorder needed.</div></div>
-            </div>
-            <div class="alert-row">
-              <div class="alert-icon" style="background:#FCEBEB;color:#791F1F;">!</div>
-              <div><div class="alert-text">Brown sugar syrup low stock</div><div class="alert-sub">150ml remaining — min 500ml.</div></div>
-            </div>
-            <div class="alert-row">
-              <div class="alert-icon" style="background:#FAEEDA;color:#633806;">↕</div>
-              <div><div class="alert-text">Fresh milk Batch B002 near expiry</div><div class="alert-sub">Expires in 2 days (25 Apr). Use FIFO — deduct first.</div></div>
-            </div>
+            <div id="dash-alerts"><div class="loading"><div class="spinner"></div>Loading...</div></div>
           </div>
         </div>
-
         <div class="section">
-          <div class="section-head"><span class="section-title">Weekly revenue</span></div>
-          <div style="padding:14px;">
-            <div class="chart-bars">
-              <div class="chart-bar-wrap"><div class="chart-bar" style="height:55px;"></div><div class="chart-bar-label">Mon</div></div>
-              <div class="chart-bar-wrap"><div class="chart-bar" style="height:70px;background:#1D9E75;"></div><div class="chart-bar-label">Tue</div></div>
-              <div class="chart-bar-wrap"><div class="chart-bar" style="height:48px;"></div><div class="chart-bar-label">Wed</div></div>
-              <div class="chart-bar-wrap"><div class="chart-bar" style="height:82px;background:#1D9E75;"></div><div class="chart-bar-label">Thu</div></div>
-              <div class="chart-bar-wrap"><div class="chart-bar" style="height:90px;background:#0F6E56;"></div><div class="chart-bar-label">Fri</div></div>
-              <div class="chart-bar-wrap"><div class="chart-bar" style="height:78px;background:#5DCAA5;"></div><div class="chart-bar-label">Sat</div></div>
-              <div class="chart-bar-wrap"><div class="chart-bar" style="height:60px;background:#9FE1CB;"></div><div class="chart-bar-label">Sun</div></div>
+          <div class="section-head"><span class="section-title">Weekly revenue</span><span style="font-size:11px;color:var(--text3);font-family:var(--mono);">Rp</span></div>
+          <div style="padding:16px 18px;"><div class="chart-bars" id="dash-chart"><div class="loading"><div class="spinner"></div></div></div></div>
+        </div>
+      </div>
+
+      <!-- ORDERS -->
+      <div class="page" id="page-orders">
+        <div class="section">
+          <div class="section-head">
+            <span class="section-title">Orders</span>
+            <div style="display:flex;gap:8px;">
+              <select id="orders-filter" style="font-size:11px;padding:5px 10px;width:auto;">
+                <option value="">All platforms</option><option value="ShopeeFood">ShopeeFood</option><option value="Manual">Manual</option>
+              </select>
+              <button class="btn btn-primary" id="btn-new-order">+ New order</button>
             </div>
+          </div>
+          <div id="orders-table-wrap"><div class="loading"><div class="spinner"></div>Loading orders...</div></div>
+        </div>
+        <div class="section">
+          <div class="section-head"><span class="section-title">Order flow</span></div>
+          <div class="flow-steps">
+            <div class="flow-step"><div class="flow-step-num">1</div><div class="flow-step-title">Import</div><div class="flow-step-sub">Shopee API / Manual</div></div>
+            <div class="flow-step"><div class="flow-step-num">2</div><div class="flow-step-title">Platform fee</div><div class="flow-step-sub">Gross × commission%</div></div>
+            <div class="flow-step"><div class="flow-step-num">3</div><div class="flow-step-title">FIFO deduct</div><div class="flow-step-sub">Earliest expiry first</div></div>
+            <div class="flow-step"><div class="flow-step-num">4</div><div class="flow-step-title">COGS calc</div><div class="flow-step-sub">Qty × batch unit cost</div></div>
+            <div class="flow-step"><div class="flow-step-num">5</div><div class="flow-step-title">Profit</div><div class="flow-step-sub">Net − COGS − packaging</div></div>
           </div>
         </div>
       </div>
@@ -206,266 +316,79 @@
       <!-- INVENTORY -->
       <div class="page" id="page-inventory">
         <div class="section">
-          <div class="section-head">
-            <span class="section-title">Raw material stock</span>
-            <div style="display:flex;gap:6px;">
-              <button class="btn" onclick="sendPrompt('Which inventory items need restocking urgently and how much should I order?')">AI reorder advice ↗</button>
-              <button class="btn btn-primary">+ Add item</button>
-            </div>
-          </div>
-          <table>
-            <thead><tr><th>Item</th><th>Category</th><th>Unit</th><th>Stock</th><th>Min stock</th><th>Status</th><th>Nearest expiry</th></tr></thead>
-            <tbody>
-              <tr><td>Fresh milk</td><td>Ingredient</td><td>ml</td><td><div class="stock-bar-wrap"><div class="stock-bar" style="width:80%;background:#1D9E75;"></div></div>4,000</td><td>1,000</td><td><span class="badge badge-ok">OK</span></td><td>25 Apr 2026</td></tr>
-              <tr><td>Black tea leaves</td><td>Ingredient</td><td>gram</td><td><div class="stock-bar-wrap"><div class="stock-bar" style="width:60%;background:#1D9E75;"></div></div>600</td><td>200</td><td><span class="badge badge-ok">OK</span></td><td>30 Jun 2026</td></tr>
-              <tr><td>Pearl (tapioca)</td><td>Ingredient</td><td>gram</td><td><div class="stock-bar-wrap"><div class="stock-bar" style="width:15%;background:#E24B4A;"></div></div>80</td><td>200</td><td><span class="badge badge-danger">Low</span></td><td>28 May 2026</td></tr>
-              <tr><td>Brown sugar syrup</td><td>Ingredient</td><td>ml</td><td><div class="stock-bar-wrap"><div class="stock-bar" style="width:20%;background:#E24B4A;"></div></div>150</td><td>500</td><td><span class="badge badge-danger">Low</span></td><td>15 Jun 2026</td></tr>
-              <tr><td>Taro powder</td><td>Ingredient</td><td>gram</td><td><div class="stock-bar-wrap"><div class="stock-bar" style="width:55%;background:#EF9F27;"></div></div>550</td><td>300</td><td><span class="badge badge-ok">OK</span></td><td>31 Aug 2026</td></tr>
-              <tr><td>Sugar</td><td>Ingredient</td><td>gram</td><td><div class="stock-bar-wrap"><div class="stock-bar" style="width:90%;background:#1D9E75;"></div></div>4,500</td><td>500</td><td><span class="badge badge-ok">OK</span></td><td>Dec 2026</td></tr>
-              <tr><td>Cup (16oz)</td><td>Packaging</td><td>pcs</td><td><div class="stock-bar-wrap"><div class="stock-bar" style="width:70%;background:#1D9E75;"></div></div>350</td><td>100</td><td><span class="badge badge-ok">OK</span></td><td>—</td></tr>
-              <tr><td>Dome lid</td><td>Packaging</td><td>pcs</td><td><div class="stock-bar-wrap"><div class="stock-bar" style="width:65%;background:#1D9E75;"></div></div>320</td><td>100</td><td><span class="badge badge-ok">OK</span></td><td>—</td></tr>
-            </tbody>
-          </table>
+          <div class="section-head"><span class="section-title">Raw materials</span><button class="btn btn-primary" id="btn-add-inv">+ Add item</button></div>
+          <div id="inventory-table-wrap"><div class="loading"><div class="spinner"></div>Loading...</div></div>
         </div>
-
         <div class="section">
-          <div class="section-head"><span class="section-title">FIFO batch deduction — how it works</span></div>
-          <div class="fifo-visual">
-            <div class="fifo-batch" style="background:#FCEBEB;color:#791F1F;">B001<br><small>Exp 25 Apr</small><br><small>800ml left</small></div>
-            <div class="fifo-arrow">→</div>
-            <div class="fifo-batch" style="background:#FAEEDA;color:#633806;">B002<br><small>Exp 30 Apr</small><br><small>2000ml</small></div>
-            <div class="fifo-arrow">→</div>
-            <div class="fifo-batch" style="background:#EAF3DE;color:#27500A;">B003<br><small>Exp 10 May</small><br><small>2000ml</small></div>
-            <div style="font-size:11px;color:var(--color-text-secondary);margin-left:8px;">Each order deducts from <strong>earliest expiry first</strong>. B001 is depleted before touching B002.</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ORDERS -->
-      <div class="page" id="page-orders">
-        <div class="metrics" style="grid-template-columns:repeat(3,1fr);">
-          <div class="metric-card"><div class="metric-label">Today's orders</div><div class="metric-val">47</div></div>
-          <div class="metric-card"><div class="metric-label">ShopeeFood</div><div class="metric-val">34</div><div class="metric-sub">72% of orders</div></div>
-          <div class="metric-card"><div class="metric-label">Manual (WA/IG)</div><div class="metric-val">13</div><div class="metric-sub">28% of orders</div></div>
-        </div>
-
-        <div class="section">
-          <div class="section-head">
-            <span class="section-title">Recent orders</span>
-            <div style="display:flex;gap:6px;">
-              <select style="font-size:12px;padding:4px 8px;width:auto;"><option>All platforms</option><option>ShopeeFood</option><option>Manual</option></select>
-              <button class="btn btn-primary">+ Manual order</button>
-            </div>
-          </div>
-          <table>
-            <thead><tr><th>Order ID</th><th>Platform</th><th>Items</th><th>Gross</th><th>Platform fee</th><th>Net</th><th>Status</th></tr></thead>
-            <tbody>
-              <tr><td style="font-family:var(--font-mono);font-size:11px;">#SF-88341</td><td><span class="badge" style="background:#FAEEDA;color:#633806;">Shopee</span></td><td>Roasted MT ×2</td><td>Rp 56,000</td><td>Rp 9,520 (17%)</td><td>Rp 46,480</td><td><span class="order-status status-completed">Completed</span></td></tr>
-              <tr><td style="font-family:var(--font-mono);font-size:11px;">#MN-00293</td><td><span class="badge" style="background:#E1F5EE;color:#085041;">Manual</span></td><td>Taro MT ×1, Pearl ×1</td><td>Rp 38,000</td><td>Rp 0</td><td>Rp 38,000</td><td><span class="order-status status-completed">Completed</span></td></tr>
-              <tr><td style="font-family:var(--font-mono);font-size:11px;">#SF-88342</td><td><span class="badge" style="background:#FAEEDA;color:#633806;">Shopee</span></td><td>Brown Sugar ×3</td><td>Rp 75,000</td><td>Rp 12,750 (17%)</td><td>Rp 62,250</td><td><span class="order-status status-pending">Pending</span></td></tr>
-              <tr><td style="font-family:var(--font-mono);font-size:11px;">#SF-88339</td><td><span class="badge" style="background:#FAEEDA;color:#633806;">Shopee</span></td><td>Matcha Latte ×2</td><td>Rp 52,000</td><td>Rp 8,840 (17%)</td><td>Rp 43,160</td><td><span class="order-status status-cancelled">Cancelled</span></td></tr>
-            </tbody>
-          </table>
-          <div style="padding:8px 14px;font-size:11px;color:var(--color-text-secondary);">Cancelled orders auto-reverse inventory deductions.</div>
-        </div>
-
-        <div class="section">
-          <div class="section-head"><span class="section-title">Order flow</span></div>
-          <div class="flow-steps">
-            <div class="flow-step"><div class="flow-step-num">1</div><div style="font-size:11px;font-weight:500;">Import</div><div class="flow-step-label">Shopee API / Manual</div></div>
-            <div class="flow-step"><div class="flow-step-num">2</div><div style="font-size:11px;font-weight:500;">Platform fee</div><div class="flow-step-label">Gross × commission%</div></div>
-            <div class="flow-step"><div class="flow-step-num">3</div><div style="font-size:11px;font-weight:500;">Stock deduct</div><div class="flow-step-label">FIFO per recipe</div></div>
-            <div class="flow-step"><div class="flow-step-num">4</div><div style="font-size:11px;font-weight:500;">COGS calc</div><div class="flow-step-label">Qty × batch unit cost</div></div>
-            <div class="flow-step"><div class="flow-step-num">5</div><div style="font-size:11px;font-weight:500;">Profit</div><div class="flow-step-label">Net − COGS − pack</div></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- RECIPES -->
-      <div class="page" id="page-recipes">
-        <div class="section">
-          <div class="section-head">
-            <span class="section-title">Bill of materials — recipes</span>
-            <button class="btn btn-primary">+ New recipe</button>
-          </div>
-          <div style="padding:14px;display:flex;flex-direction:column;gap:14px;">
-            <div style="border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);overflow:hidden;">
-              <div style="padding:10px 14px;background:var(--color-background-secondary);display:flex;justify-content:space-between;align-items:center;">
-                <span style="font-size:13px;font-weight:500;">Roasted Milk Tea (large)</span>
-                <span style="font-size:11px;color:var(--color-text-secondary);">COGS: ~Rp 7,200</span>
-              </div>
-              <div style="padding:10px 14px;display:flex;flex-wrap:wrap;gap:4px;">
-                <span class="recipe-chip">Fresh milk 250ml</span>
-                <span class="recipe-chip">Black tea 5g</span>
-                <span class="recipe-chip">Sugar 15g</span>
-                <span class="recipe-chip">Pearl 30g</span>
-                <span class="recipe-chip">Cup 1 pcs</span>
-                <span class="recipe-chip">Dome lid 1 pcs</span>
-                <span class="recipe-chip">Straw 1 pcs</span>
-              </div>
-            </div>
-            <div style="border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);overflow:hidden;">
-              <div style="padding:10px 14px;background:var(--color-background-secondary);display:flex;justify-content:space-between;align-items:center;">
-                <span style="font-size:13px;font-weight:500;">Taro Milk Tea (large)</span>
-                <span style="font-size:11px;color:var(--color-text-secondary);">COGS: ~Rp 8,100</span>
-              </div>
-              <div style="padding:10px 14px;display:flex;flex-wrap:wrap;gap:4px;">
-                <span class="recipe-chip">Fresh milk 200ml</span>
-                <span class="recipe-chip">Taro powder 20g</span>
-                <span class="recipe-chip">Sugar 15g</span>
-                <span class="recipe-chip">Pearl 30g</span>
-                <span class="recipe-chip">Cup 1 pcs</span>
-                <span class="recipe-chip">Dome lid 1 pcs</span>
-              </div>
-            </div>
-            <div style="border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);overflow:hidden;">
-              <div style="padding:10px 14px;background:var(--color-background-secondary);display:flex;justify-content:space-between;align-items:center;">
-                <span style="font-size:13px;font-weight:500;">Brown Sugar Boba</span>
-                <span style="font-size:11px;color:var(--color-text-secondary);">COGS: ~Rp 9,400</span>
-              </div>
-              <div style="padding:10px 14px;display:flex;flex-wrap:wrap;gap:4px;">
-                <span class="recipe-chip">Fresh milk 300ml</span>
-                <span class="recipe-chip">Brown sugar syrup 40ml</span>
-                <span class="recipe-chip">Pearl 50g</span>
-                <span class="recipe-chip">Sugar 5g</span>
-                <span class="recipe-chip">Cup 1 pcs</span>
-                <span class="recipe-chip">Dome lid 1 pcs</span>
-              </div>
-            </div>
-          </div>
+          <div class="section-head"><span class="section-title">Active batches — FIFO order</span></div>
+          <div id="batches-wrap"><div class="loading"><div class="spinner"></div></div></div>
         </div>
       </div>
 
       <!-- PURCHASING -->
       <div class="page" id="page-purchasing">
         <div class="section">
-          <div class="section-head">
-            <span class="section-title">New purchase</span>
-          </div>
-          <div class="form-grid">
-            <div class="form-group"><div class="form-label">Supplier name</div><input class="input" placeholder="e.g. UD Bahan Minuman" /></div>
-            <div class="form-group"><div class="form-label">Purchase date</div><input class="input" type="date" value="2026-04-23" /></div>
-            <div class="form-group"><div class="form-label">Item</div><select><option>Fresh milk</option><option>Black tea leaves</option><option>Pearl (tapioca)</option><option>Brown sugar syrup</option><option>Taro powder</option></select></div>
-            <div class="form-group"><div class="form-label">Quantity (ml / gram / pcs)</div><input class="input" type="number" placeholder="e.g. 5000" /></div>
-            <div class="form-group"><div class="form-label">Unit cost (Rp)</div><input class="input" type="number" placeholder="e.g. 18000" /></div>
-            <div class="form-group"><div class="form-label">Expiry date</div><input class="input" type="date" /></div>
-          </div>
-          <div style="padding:0 14px 14px;"><button class="btn btn-primary">Save & add to batches →</button></div>
-          <div style="padding:8px 14px;border-top:0.5px solid var(--color-border-tertiary);font-size:11px;color:var(--color-text-secondary);">Saving creates an inventory_batch record and updates current_stock + logs an inventory_movement (IN).</div>
+          <div class="section-head"><span class="section-title">Purchase history</span><button class="btn btn-primary" id="btn-new-purchase">+ New purchase</button></div>
+          <div id="purchases-table-wrap"><div class="loading"><div class="spinner"></div>Loading...</div></div>
         </div>
+      </div>
 
+      <!-- RECIPES -->
+      <div class="page" id="page-recipes">
         <div class="section">
-          <div class="section-head"><span class="section-title">Recent purchases</span></div>
-          <table>
-            <thead><tr><th>Date</th><th>Supplier</th><th>Item</th><th>Qty</th><th>Unit cost</th><th>Expiry</th><th>Total</th></tr></thead>
-            <tbody>
-              <tr><td>20 Apr</td><td>UD Bahan</td><td>Fresh milk</td><td>5,000ml</td><td>Rp 18/ml</td><td>30 Apr</td><td>Rp 90,000</td></tr>
-              <tr><td>19 Apr</td><td>Pak Agus</td><td>Pearl (tapioca)</td><td>1,000g</td><td>Rp 45/g</td><td>28 May</td><td>Rp 45,000</td></tr>
-              <tr><td>18 Apr</td><td>UD Bahan</td><td>Black tea leaves</td><td>500g</td><td>Rp 80/g</td><td>30 Jun</td><td>Rp 40,000</td></tr>
-            </tbody>
-          </table>
+          <div class="section-head"><span class="section-title">Recipes / Bill of Materials</span><button class="btn btn-primary" id="btn-new-recipe">+ New recipe</button></div>
+          <div id="recipes-wrap"><div class="loading"><div class="spinner"></div>Loading...</div></div>
         </div>
       </div>
 
       <!-- PROFIT -->
       <div class="page" id="page-profit">
         <div class="metrics">
-          <div class="metric-card"><div class="metric-label">Gross revenue</div><div class="metric-val">Rp 2.1M</div></div>
-          <div class="metric-card"><div class="metric-label">Platform fees</div><div class="metric-val" style="color:#A32D2D;">−Rp 357K</div></div>
-          <div class="metric-card"><div class="metric-label">COGS</div><div class="metric-val" style="color:#A32D2D;">−Rp 430K</div></div>
-          <div class="metric-card"><div class="metric-label">Net profit</div><div class="metric-val" style="color:#1D9E75;">Rp 910K</div></div>
+          <div class="metric-card"><div class="metric-label">This month gross</div><div class="metric-val green" id="fin-gross">—</div></div>
+          <div class="metric-card"><div class="metric-label">Platform fees</div><div class="metric-val red" id="fin-fees">—</div></div>
+          <div class="metric-card"><div class="metric-label">COGS</div><div class="metric-val red" id="fin-cogs">—</div></div>
+          <div class="metric-card"><div class="metric-label">Net profit</div><div class="metric-val green" id="fin-profit">—</div></div>
         </div>
-
         <div class="section">
-          <div class="section-head"><span class="section-title">Profit breakdown — today's orders</span></div>
-          <div style="padding:14px;">
-            <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--color-text-secondary);margin-bottom:4px;">
-              <span>Revenue</span><span>Platform fee</span><span>COGS</span><span>Packaging</span><span>Profit</span>
-            </div>
-            <div class="profit-bar">
-              <div class="pb-seg" style="width:43%;background:#1D9E75;"></div>
-              <div class="pb-seg" style="width:17%;background:#E24B4A;"></div>
-              <div class="pb-seg" style="width:20%;background:#EF9F27;"></div>
-              <div class="pb-seg" style="width:7%;background:#B4B2A9;"></div>
-              <div class="pb-seg" style="flex:1;background:#9FE1CB;"></div>
-            </div>
-            <div class="legend-row">
-              <span><span class="legend-dot" style="background:#1D9E75;"></span>Net revenue Rp 1.74M</span>
-              <span><span class="legend-dot" style="background:#E24B4A;"></span>Platform fee Rp 357K</span>
-              <span><span class="legend-dot" style="background:#EF9F27;"></span>COGS Rp 430K</span>
-              <span><span class="legend-dot" style="background:#B4B2A9;"></span>Packaging Rp 153K</span>
-              <span><span class="legend-dot" style="background:#9FE1CB;"></span>Profit Rp 910K</span>
-            </div>
-          </div>
+          <div class="section-head"><span class="section-title">Profit breakdown</span></div>
+          <div style="padding:16px 18px;"><div class="profit-bar" id="profit-bar"></div><div class="legend-row" id="profit-legend"></div></div>
         </div>
-
         <div class="section">
           <div class="section-head"><span class="section-title">Profit per menu</span></div>
-          <table>
-            <thead><tr><th>Product</th><th>Sale price</th><th>COGS</th><th>Packaging</th><th>Shopee net</th><th>Margin</th></tr></thead>
-            <tbody>
-              <tr><td>Roasted Milk Tea</td><td>Rp 28,000</td><td>Rp 7,200</td><td>Rp 1,500</td><td>Rp 23,240</td><td style="color:#1D9E75;font-weight:500;">52%</td></tr>
-              <tr><td>Taro Milk Tea</td><td>Rp 28,000</td><td>Rp 8,100</td><td>Rp 1,500</td><td>Rp 23,240</td><td style="color:#1D9E75;font-weight:500;">58%</td></tr>
-              <tr><td>Brown Sugar Boba</td><td>Rp 25,000</td><td>Rp 9,400</td><td>Rp 1,500</td><td>Rp 20,750</td><td style="color:#EF9F27;font-weight:500;">46%</td></tr>
-              <tr><td>Matcha Latte</td><td>Rp 26,000</td><td>Rp 8,800</td><td>Rp 1,500</td><td>Rp 21,580</td><td style="color:#EF9F27;font-weight:500;">51%</td></tr>
-            </tbody>
-          </table>
-          <div style="padding:8px 14px;"><button class="btn" onclick="sendPrompt('Analyze my milk tea menu profitability and suggest which products to promote or reprice.')">AI margin analysis ↗</button></div>
+          <div id="profit-table-wrap"><div class="loading"><div class="spinner"></div></div></div>
         </div>
       </div>
 
       <!-- PLATFORMS -->
       <div class="page" id="page-platforms">
         <div class="section">
-          <div class="section-head"><span class="section-title">Platform configuration</span><button class="btn btn-primary">+ Add platform</button></div>
-          <div class="platform-row">
-            <div style="width:32px;height:32px;border-radius:8px;background:#FAEEDA;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500;color:#633806;">SF</div>
-            <div class="platform-name">ShopeeFood<br><span style="font-size:11px;color:var(--color-text-secondary);">API sync · Webhook available</span></div>
-            <div class="platform-stat"><div class="val">17%</div><div class="lbl">Commission</div></div>
-            <div class="platform-stat"><div class="val">Rp 0</div><div class="lbl">Fixed fee</div></div>
-            <div class="platform-stat"><div class="val">34</div><div class="lbl">Orders today</div></div>
-            <span class="badge badge-ok" style="margin-left:8px;">Active</span>
-          </div>
-          <div class="platform-row">
-            <div style="width:32px;height:32px;border-radius:8px;background:#E1F5EE;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500;color:#085041;">WA</div>
-            <div class="platform-name">WhatsApp / IG Manual<br><span style="font-size:11px;color:var(--color-text-secondary);">Manual entry · No fee</span></div>
-            <div class="platform-stat"><div class="val">0%</div><div class="lbl">Commission</div></div>
-            <div class="platform-stat"><div class="val">Rp 0</div><div class="lbl">Fixed fee</div></div>
-            <div class="platform-stat"><div class="val">13</div><div class="lbl">Orders today</div></div>
-            <span class="badge badge-ok" style="margin-left:8px;">Active</span>
+          <div class="section-head"><span class="section-title">Platform configuration</span></div>
+          <div style="padding:18px;display:flex;flex-direction:column;gap:14px;">
+            <div style="border:1px solid var(--border);border-radius:var(--radius);padding:16px;display:flex;align-items:center;gap:14px;">
+              <div style="width:36px;height:36px;border-radius:8px;background:rgba(244,166,29,.15);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--warn);">SF</div>
+              <div style="flex:1;"><div style="font-size:13px;font-weight:600;">ShopeeFood</div><div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:2px;">Cron sync · get_order_list, get_order_detail, get_escrow_detail</div></div>
+              <div style="text-align:right;"><div style="font-size:13px;font-weight:600;">17%</div><div style="font-size:10px;color:var(--text3);">Commission</div></div>
+              <span class="badge badge-ok">Active</span>
+            </div>
+            <div style="border:1px solid var(--border);border-radius:var(--radius);padding:16px;display:flex;align-items:center;gap:14px;">
+              <div style="width:36px;height:36px;border-radius:8px;background:rgba(79,168,232,.12);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--info);">WA</div>
+              <div style="flex:1;"><div style="font-size:13px;font-weight:600;">WhatsApp / Instagram</div><div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:2px;">Manual entry · No platform fee</div></div>
+              <div style="text-align:right;"><div style="font-size:13px;font-weight:600;">0%</div><div style="font-size:10px;color:var(--text3);">Commission</div></div>
+              <span class="badge badge-ok">Active</span>
+            </div>
           </div>
         </div>
         <div class="section">
-          <div class="section-head"><span class="section-title">ShopeeFood API sync settings</span></div>
-          <div class="form-grid">
-            <div class="form-group"><div class="form-label">Sync strategy</div><select><option>Cron (every 10 min)</option><option>Webhook (recommended)</option></select></div>
-            <div class="form-group"><div class="form-label">Endpoints used</div><input class="input" value="get_order_list, get_order_detail, get_escrow_detail" readonly /></div>
-          </div>
-          <div style="padding:0 14px 14px;font-size:11px;color:var(--color-text-secondary);">Shopee order_id → orders.external_id · item_name → product_name · commission → platform_fee</div>
-        </div>
-      </div>
-
-      <!-- AI INSIGHTS -->
-      <div class="page" id="page-ai">
-        <div class="section">
-          <div class="section-head"><span class="section-title">AI business insights</span></div>
-          <div style="padding:14px;display:flex;flex-direction:column;gap:10px;">
-            <button class="btn" style="text-align:left;padding:10px 14px;" onclick="sendPrompt('Based on my milk tea shop inventory and sales data, which items are at risk of spoilage this week and what should I do?')">
-              Which ingredients are at spoilage risk this week? ↗
-            </button>
-            <button class="btn" style="text-align:left;padding:10px 14px;" onclick="sendPrompt('Analyze my milk tea shop profit margins per product and suggest pricing changes to maximize profitability.')">
-              Which products should I reprice to improve margins? ↗
-            </button>
-            <button class="btn" style="text-align:left;padding:10px 14px;" onclick="sendPrompt('My milk tea shop uses FIFO batch tracking. Explain how I should train my staff to follow FIFO during production.')">
-              How do I train staff on FIFO inventory? ↗
-            </button>
-            <button class="btn" style="text-align:left;padding:10px 14px;" onclick="sendPrompt('What are best practices for integrating ShopeeFood API orders with an inventory management system to avoid stock discrepancies?')">
-              ShopeeFood API integration best practices ↗
-            </button>
-            <button class="btn" style="text-align:left;padding:10px 14px;" onclick="sendPrompt('Help me design the Firestore data structure for a milk tea shop with inventory batches, FIFO deduction, and profit tracking.')">
-              Design the Firestore schema for this system ↗
-            </button>
-          </div>
+          <div class="section-head"><span class="section-title">Field mapping — Shopee → Internal</span></div>
+          <table>
+            <thead><tr><th>ShopeeFood field</th><th>Internal field</th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">order_id</td><td class="mono">orders.external_id</td><td style="color:var(--text2);">Deduplication key</td></tr>
+              <tr><td class="mono">item_name</td><td class="mono">order_items.product_name</td><td style="color:var(--text2);">Matched to recipe</td></tr>
+              <tr><td class="mono">price</td><td class="mono">orders.gross_amount</td><td style="color:var(--text2);">Before fee deduction</td></tr>
+              <tr><td class="mono">commission</td><td class="mono">orders.platform_fee</td><td style="color:var(--text2);">17% of gross</td></tr>
+            </tbody>
+          </table>
         </div>
       </div>
 
@@ -473,13 +396,563 @@
   </div>
 </div>
 
-<script>
-const pages = { dashboard: 'Daily Dashboard', inventory: 'Inventory', orders: 'Orders', recipes: 'Recipes / BOM', purchasing: 'Purchasing', profit: 'Profit & Finance', platforms: 'Platforms', ai: 'AI Insights' };
-function showPage(id, el) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  document.getElementById('page-' + id).classList.add('active');
-  el.classList.add('active');
-  document.getElementById('page-title').textContent = pages[id];
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import {
+  getFirestore, collection, doc, addDoc, getDocs, deleteDoc,
+  updateDoc, query, where, orderBy, limit,
+  serverTimestamp, increment, Timestamp, writeBatch
+} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+const app = initializeApp({
+  apiKey:"AIzaSyBDk93zFMUkMiKyGvqambm34JCwWWopX-k",
+  authDomain:"rostimilktea.firebaseapp.com",
+  projectId:"rostimilktea",
+  storageBucket:"rostimilktea.firebasestorage.app",
+  messagingSenderId:"412721366089",
+  appId:"1:412721366089:web:ae4f93a0b0cbeefc662b98"
+});
+const db = getFirestore(app);
+
+// ── utils ─────────────────────────────────────────────────────────────
+const fmt = n => 'Rp ' + Math.round(n||0).toLocaleString('id-ID');
+const $ = id => document.getElementById(id);
+const loading = () => '<div class="loading"><div class="spinner"></div>Loading...</div>';
+
+function toast(msg, type='ok') {
+  const el = $('toast');
+  $('toast-msg').textContent = msg;
+  $('toast-icon').textContent = type==='error'?'✕':type==='warn'?'⚠':'✓';
+  el.style.borderColor = type==='error'?'rgba(232,91,91,.4)':type==='warn'?'rgba(244,166,29,.4)':'rgba(31,201,138,.3)';
+  el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'), 3200);
 }
+
+function openModal(id) { $(id).classList.add('open'); }
+function closeModal(id) { $(id).classList.remove('open'); }
+
+// ── connection check ───────────────────────────────────────────────────
+try {
+  await getDocs(query(collection(db,'inventory_items'), limit(1)));
+  $('conn-dot').classList.add('ok');
+  $('conn-label').textContent = 'Firestore connected';
+} catch(e) {
+  $('conn-label').textContent = 'Connection error';
+}
+$('today-date').textContent = new Date().toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'});
+
+// ── navigation ─────────────────────────────────────────────────────────
+const pageTitles = {dashboard:'Dashboard',orders:'Orders',inventory:'Inventory',purchasing:'Purchasing',recipes:'Recipes / BOM',profit:'Profit & Finance',platforms:'Platforms'};
+const pageLoaders = {dashboard:loadDashboard, orders:loadOrders, inventory:loadInventory, purchasing:loadPurchases, recipes:loadRecipes, profit:loadProfit};
+
+document.querySelectorAll('.nav-item').forEach(item => {
+  item.addEventListener('click', () => {
+    const page = item.dataset.page;
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    $('page-' + page).classList.add('active');
+    item.classList.add('active');
+    $('page-title').textContent = pageTitles[page] || page;
+    if (pageLoaders[page]) pageLoaders[page]();
+  });
+});
+
+// Close modals
+['inventory','order','purchase','recipe'].forEach(name => {
+  $('close-modal-' + name).addEventListener('click', () => closeModal('modal-' + name));
+  const cancel = $('cancel-' + (name==='inventory'?'inv':name==='order'?'order':name==='purchase'?'purchase':'recipe'));
+  if (cancel) cancel.addEventListener('click', () => closeModal('modal-' + name));
+  $('modal-' + name).addEventListener('click', e => { if(e.target === $('modal-' + name)) closeModal('modal-' + name); });
+});
+
+// ── Filter orders on change ───────────────────────────────────────────
+$('orders-filter').addEventListener('change', loadOrders);
+
+// ═══════════════════════════════════════════════════════════════════════
+// INVENTORY
+// ═══════════════════════════════════════════════════════════════════════
+$('btn-add-inv').addEventListener('click', () => openModal('modal-inventory'));
+
+$('submit-inv').addEventListener('click', async () => {
+  const name = $('inv-name').value.trim();
+  const category = $('inv-category').value;
+  const unit = $('inv-unit').value;
+  const stock = parseFloat($('inv-stock').value)||0;
+  const min = parseFloat($('inv-min').value)||0;
+  if (!name) { toast('Enter item name','error'); return; }
+  $('submit-inv').textContent = 'Saving...';
+  try {
+    await addDoc(collection(db,'inventory_items'),{name,category,unit,current_stock:stock,min_stock:min,created_at:serverTimestamp()});
+    closeModal('modal-inventory');
+    toast('Item added to inventory');
+    ['inv-name','inv-stock','inv-min'].forEach(id => $(id).value='');
+    loadInventory();
+  } catch(e) { toast('Error: '+e.message,'error'); }
+  $('submit-inv').textContent = 'Save item';
+});
+
+async function loadInventory() {
+  $('inventory-table-wrap').innerHTML = loading();
+  const snap = await getDocs(collection(db,'inventory_items'));
+  const items = snap.docs.map(d=>({id:d.id,...d.data()}));
+  if (!items.length) { $('inventory-table-wrap').innerHTML='<div class="empty"><div class="empty-icon">📦</div>No items yet. Add your first item.</div>'; return; }
+  let lowCount=0;
+  let html = `<table><thead><tr><th>Item</th><th>Category</th><th>Unit</th><th>Stock</th><th>Min stock</th><th>Status</th><th></th></tr></thead><tbody>`;
+  items.forEach(item => {
+    const isLow = (item.current_stock||0) < (item.min_stock||0);
+    if (isLow) lowCount++;
+    const pct = Math.min(100, item.min_stock ? Math.round((item.current_stock||0)/(item.min_stock)*100) : 100);
+    const color = isLow ? '#e85b5b' : pct<150 ? '#f4a61d' : '#1fc98a';
+    html += `<tr>
+      <td style="font-weight:500;">${item.name}</td>
+      <td><span class="badge ${item.category==='packaging'?'badge-info':'badge-ok'}">${item.category}</span></td>
+      <td class="mono">${item.unit}</td>
+      <td>
+        <div class="stock-bar-wrap"><div class="stock-bar" style="width:${Math.min(100,pct)}%;background:${color};"></div></div>
+        <span class="mono">${(item.current_stock||0).toLocaleString()}</span>
+      </td>
+      <td class="mono">${(item.min_stock||0).toLocaleString()}</td>
+      <td><span class="badge ${isLow?'badge-danger':'badge-ok'}">${isLow?'LOW':'OK'}</span></td>
+      <td><button class="btn btn-sm btn-danger" data-del-inv="${item.id}">Delete</button></td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  $('inventory-table-wrap').innerHTML = html;
+  document.querySelectorAll('[data-del-inv]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (!confirm('Delete this item?')) return;
+      await deleteDoc(doc(db,'inventory_items',btn.dataset.delInv));
+      toast('Item deleted','warn');
+      loadInventory();
+    });
+  });
+  const alertEl = $('alert-low-stock');
+  if (lowCount > 0) { alertEl.textContent = `${lowCount} Low Stock`; alertEl.style.display='inline'; }
+  else alertEl.style.display='none';
+  loadBatches();
+}
+
+async function loadBatches() {
+  $('batches-wrap').innerHTML = loading();
+  try {
+    const snap = await getDocs(query(collection(db,'inventory_batches'), orderBy('expiry_date','asc')));
+    const batches = snap.docs.map(d=>({id:d.id,...d.data()}));
+    if (!batches.length) { $('batches-wrap').innerHTML='<div class="empty"><div class="empty-icon">🗂</div>No batches yet. Record a purchase to create batches.</div>'; return; }
+    const today = new Date(); today.setHours(0,0,0,0);
+    let nearExpiry=0, html='<div class="fifo-visual">';
+    batches.slice(0,8).forEach((b,i) => {
+      const exp = b.expiry_date ? (b.expiry_date.toDate?b.expiry_date.toDate():new Date(b.expiry_date)) : null;
+      const days = exp ? Math.ceil((exp-today)/86400000) : 999;
+      if (days<=3&&days>0) nearExpiry++;
+      const [bg,bc,tc] = days<=3 ? ['rgba(232,91,91,.15)','rgba(232,91,91,.4)','#e85b5b'] :
+                          days<=7 ? ['rgba(244,166,29,.15)','rgba(244,166,29,.4)','#f4a61d'] :
+                                    ['rgba(31,201,138,.08)','rgba(31,201,138,.3)','#1fc98a'];
+      html += `${i>0?'<div class="fifo-arr">→</div>':''}
+        <div class="fifo-batch" style="background:${bg};border-color:${bc};color:${tc};">
+          <div style="font-size:10px;color:var(--text3);">${b.item_name||''}</div>
+          <div style="font-weight:600;">${(b.remaining_qty||0).toLocaleString()} ${b.unit||''}</div>
+          <div style="font-size:9px;margin-top:2px;">${exp?exp.toLocaleDateString('id-ID',{day:'numeric',month:'short'}):'No exp'}</div>
+        </div>`;
+    });
+    html += '</div>';
+    $('batches-wrap').innerHTML = html;
+    const expAlert = $('alert-expiry');
+    if (nearExpiry>0) { expAlert.textContent=`${nearExpiry} Near Expiry`; expAlert.style.display='inline'; }
+    else expAlert.style.display='none';
+  } catch(e) { $('batches-wrap').innerHTML='<div class="empty"><div class="empty-icon">⚠</div>Could not load batches. Check Firestore indexes.</div>'; }
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// PURCHASING
+// ═══════════════════════════════════════════════════════════════════════
+$('btn-new-purchase').addEventListener('click', async () => {
+  const snap = await getDocs(collection(db,'inventory_items'));
+  const sel = $('pur-item');
+  sel.innerHTML = '';
+  if (!snap.docs.length) { sel.innerHTML='<option>No items — add inventory first</option>'; }
+  snap.docs.forEach(d => {
+    const o = document.createElement('option');
+    o.value = d.id; o.textContent = `${d.data().name} (${d.data().unit})`; o.dataset.unit=d.data().unit;
+    sel.appendChild(o);
+  });
+  openModal('modal-purchase');
+});
+
+$('submit-purchase').addEventListener('click', async () => {
+  const supplier = $('pur-supplier').value.trim();
+  const sel = $('pur-item');
+  const itemId = sel.value;
+  const itemText = sel.selectedOptions[0]?.text||'';
+  const itemName = itemText.replace(/\s*\(\w+\)$/,'');
+  const unit = (itemText.match(/\((\w+)\)/)||[])[1]||'';
+  const qty = parseFloat($('pur-qty').value)||0;
+  const unitCost = parseFloat($('pur-unit-cost').value)||0;
+  const expiryStr = $('pur-expiry').value;
+  if (!supplier||!itemId||!qty||!unitCost) { toast('Fill all fields','error'); return; }
+  $('submit-purchase').textContent = 'Saving...';
+  try {
+    const expiryDate = expiryStr ? Timestamp.fromDate(new Date(expiryStr)) : null;
+    const b = writeBatch(db);
+    const purRef = doc(collection(db,'purchases'));
+    b.set(purRef,{supplier_name:supplier,item_id:itemId,item_name:itemName,unit,qty,unit_cost:unitCost,total_cost:qty*unitCost,expiry_date:expiryDate,created_at:serverTimestamp()});
+    const batchRef = doc(collection(db,'inventory_batches'));
+    b.set(batchRef,{item_id:itemId,item_name:itemName,unit,qty,remaining_qty:qty,unit_cost:unitCost,expiry_date:expiryDate,created_at:serverTimestamp()});
+    b.update(doc(db,'inventory_items',itemId),{current_stock:increment(qty)});
+    const movRef = doc(collection(db,'inventory_movements'));
+    b.set(movRef,{item_id:itemId,item_name:itemName,type:'IN',qty,reference:'purchase',reference_id:purRef.id,created_at:serverTimestamp()});
+    await b.commit();
+    closeModal('modal-purchase');
+    toast(`Purchase saved — ${qty.toLocaleString()} ${unit} added`);
+    ['pur-supplier','pur-qty','pur-unit-cost','pur-expiry'].forEach(id=>$(id).value='');
+    loadPurchases();
+  } catch(e) { toast('Error: '+e.message,'error'); }
+  $('submit-purchase').textContent = 'Save & add to batches';
+});
+
+async function loadPurchases() {
+  $('purchases-table-wrap').innerHTML = loading();
+  const snap = await getDocs(query(collection(db,'purchases'), orderBy('created_at','desc'), limit(50)));
+  const rows = snap.docs.map(d=>({id:d.id,...d.data()}));
+  if (!rows.length) { $('purchases-table-wrap').innerHTML='<div class="empty"><div class="empty-icon">🛒</div>No purchases yet.</div>'; return; }
+  let html = '<table><thead><tr><th>Date</th><th>Supplier</th><th>Item</th><th>Qty</th><th>Unit cost</th><th>Expiry</th><th>Total</th></tr></thead><tbody>';
+  rows.forEach(r => {
+    const d = r.created_at?.toDate?r.created_at.toDate():new Date();
+    const exp = r.expiry_date?.toDate?r.expiry_date.toDate():null;
+    html += `<tr>
+      <td class="mono">${d.toLocaleDateString('id-ID',{day:'numeric',month:'short'})}</td>
+      <td>${r.supplier_name||''}</td>
+      <td style="font-weight:500;">${r.item_name||''}</td>
+      <td class="mono">${(r.qty||0).toLocaleString()} ${r.unit||''}</td>
+      <td class="mono">${fmt(r.unit_cost||0)}</td>
+      <td class="mono">${exp?exp.toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'}):'—'}</td>
+      <td style="color:var(--accent);font-weight:500;">${fmt(r.total_cost||0)}</td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  $('purchases-table-wrap').innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// RECIPES
+// ═══════════════════════════════════════════════════════════════════════
+let _invItems = [];
+
+$('btn-new-recipe').addEventListener('click', async () => {
+  const snap = await getDocs(collection(db,'inventory_items'));
+  _invItems = snap.docs.map(d=>({id:d.id,...d.data()}));
+  $('rec-items-list').innerHTML = '';
+  addRecipeRow();
+  openModal('modal-recipe');
+});
+
+$('add-recipe-item-btn').addEventListener('click', addRecipeRow);
+
+function addRecipeRow() {
+  const opts = _invItems.map(i=>`<option value="${i.id}" data-unit="${i.unit}">${i.name} (${i.unit})</option>`).join('');
+  const row = document.createElement('div');
+  row.className = 'ingredient-row';
+  row.innerHTML = `<select>${opts||'<option>No items</option>'}</select><input type="number" placeholder="Qty" min="0" step="any"/><button class="btn btn-sm btn-danger">✕</button>`;
+  row.querySelector('button').addEventListener('click', () => row.remove());
+  $('rec-items-list').appendChild(row);
+}
+
+$('submit-recipe').addEventListener('click', async () => {
+  const name = $('rec-name').value.trim();
+  const price = parseFloat($('rec-price').value)||0;
+  if (!name) { toast('Enter product name','error'); return; }
+  const ingredients = [];
+  $('rec-items-list').querySelectorAll('.ingredient-row').forEach(row => {
+    const sel = row.querySelector('select');
+    const inp = row.querySelector('input');
+    if (sel&&inp&&inp.value) ingredients.push({item_id:sel.value,item_name:sel.selectedOptions[0]?.text||'',qty_used:parseFloat(inp.value)||0});
+  });
+  if (!ingredients.length) { toast('Add at least one ingredient','error'); return; }
+  $('submit-recipe').textContent = 'Saving...';
+  try {
+    await addDoc(collection(db,'recipes'),{product_name:name,selling_price:price,ingredients,created_at:serverTimestamp()});
+    closeModal('modal-recipe');
+    toast(`Recipe "${name}" saved`);
+    $('rec-name').value=''; $('rec-price').value=''; $('rec-items-list').innerHTML='';
+    loadRecipes();
+  } catch(e) { toast('Error: '+e.message,'error'); }
+  $('submit-recipe').textContent = 'Save recipe';
+});
+
+async function loadRecipes() {
+  $('recipes-wrap').innerHTML = loading();
+  const snap = await getDocs(query(collection(db,'recipes'), orderBy('created_at','desc')));
+  const recs = snap.docs.map(d=>({id:d.id,...d.data()}));
+  if (!recs.length) { $('recipes-wrap').innerHTML='<div class="empty"><div class="empty-icon">🥤</div>No recipes yet.</div>'; return; }
+  let html = '<div>';
+  recs.forEach(r => {
+    const chips = (r.ingredients||[]).map(i=>`<span class="recipe-chip">${i.item_name}: ${i.qty_used}</span>`).join('');
+    html += `<div style="padding:14px 18px;border-bottom:1px solid var(--border);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <span style="font-size:13px;font-weight:600;">${r.product_name}</span>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <span style="font-size:11px;color:var(--accent);font-family:var(--mono);">${fmt(r.selling_price||0)}</span>
+          <button class="btn btn-sm btn-danger" data-del-rec="${r.id}">Delete</button>
+        </div>
+      </div>
+      <div>${chips||'<span style="font-size:11px;color:var(--text3);">No ingredients</span>'}</div>
+    </div>`;
+  });
+  html += '</div>';
+  $('recipes-wrap').innerHTML = html;
+  document.querySelectorAll('[data-del-rec]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (!confirm('Delete this recipe?')) return;
+      await deleteDoc(doc(db,'recipes',btn.dataset.delRec));
+      toast('Recipe deleted','warn');
+      loadRecipes();
+    });
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// ORDERS
+// ═══════════════════════════════════════════════════════════════════════
+let _recipes = [];
+
+$('btn-new-order').addEventListener('click', async () => {
+  const snap = await getDocs(collection(db,'recipes'));
+  _recipes = snap.docs.map(d=>({id:d.id,...d.data()}));
+  $('ord-items-list').innerHTML='';
+  addOrderItemRow();
+  openModal('modal-order');
+});
+
+$('add-order-item-btn').addEventListener('click', addOrderItemRow);
+
+function addOrderItemRow() {
+  const opts = _recipes.map(r=>`<option value="${r.id}">${r.product_name} — ${fmt(r.selling_price||0)}</option>`).join('');
+  const row = document.createElement('div');
+  row.className = 'ingredient-row';
+  row.innerHTML = `<select>${opts||'<option>No recipes — add recipes first</option>'}</select><input type="number" value="1" min="1" placeholder="Qty"/><button class="btn btn-sm btn-danger">✕</button>`;
+  row.querySelector('button').addEventListener('click', () => row.remove());
+  $('ord-items-list').appendChild(row);
+}
+
+$('submit-order').addEventListener('click', async () => {
+  const customer = $('ord-customer').value.trim()||'Walk-in';
+  const platform = $('ord-platform').value;
+  const notes = $('ord-notes').value.trim();
+  const rows = $('ord-items-list').querySelectorAll('.ingredient-row');
+  const items = [];
+  rows.forEach(row => {
+    const sel = row.querySelector('select');
+    const inp = row.querySelector('input');
+    if (sel&&inp&&sel.value) {
+      const recipe = _recipes.find(r=>r.id===sel.value);
+      if (recipe) items.push({recipe_id:sel.value,product_name:recipe.product_name,qty:parseInt(inp.value)||1,price:recipe.selling_price||0,ingredients:recipe.ingredients||[]});
+    }
+  });
+  if (!items.length) { toast('Add at least one item','error'); return; }
+  $('submit-order').textContent = 'Processing...';
+  try {
+    const commPct = platform==='ShopeeFood'?0.17:0;
+    const gross = items.reduce((s,i)=>s+i.price*i.qty,0);
+    const platform_fee = Math.round(gross*commPct);
+    const net_amount = gross - platform_fee;
+    const b = writeBatch(db);
+    const orderRef = doc(collection(db,'orders'));
+    b.set(orderRef,{platform,customer_name:customer,notes,status:'completed',gross_amount:gross,platform_fee,promo_cost:0,net_amount,created_at:serverTimestamp()});
+    let totalCOGS = 0;
+    for (const item of items) {
+      const oiRef = doc(collection(db,'order_items'));
+      b.set(oiRef,{order_id:orderRef.id,product_name:item.product_name,qty:item.qty,price:item.price});
+      for (const ing of item.ingredients) {
+        let needed = ing.qty_used * item.qty;
+        const bSnap = await getDocs(query(collection(db,'inventory_batches'),where('item_id','==',ing.item_id),orderBy('expiry_date','asc')));
+        for (const bDoc of bSnap.docs) {
+          if (needed<=0) break;
+          const bd = bDoc.data();
+          const avail = bd.remaining_qty||0;
+          const take = Math.min(avail, needed);
+          if (take>0) {
+            b.update(bDoc.ref,{remaining_qty:avail-take});
+            totalCOGS += take*(bd.unit_cost||0);
+            needed -= take;
+            b.set(doc(collection(db,'inventory_movements')),{item_id:ing.item_id,item_name:ing.item_name||'',type:'OUT',qty:take,reference:'order',reference_id:orderRef.id,created_at:serverTimestamp()});
+          }
+        }
+        b.update(doc(db,'inventory_items',ing.item_id),{current_stock:increment(-(ing.qty_used*item.qty))});
+      }
+    }
+    const profit = net_amount - totalCOGS;
+    b.set(doc(collection(db,'order_profit')),{order_id:orderRef.id,revenue:net_amount,cogs:totalCOGS,packaging_cost:0,profit,created_at:serverTimestamp()});
+    await b.commit();
+    closeModal('modal-order');
+    toast(`Order saved — ${fmt(gross)} gross · ${fmt(profit)} profit`);
+    ['ord-customer','ord-notes'].forEach(id=>$(id).value='');
+    $('ord-items-list').innerHTML='';
+    loadOrders();
+  } catch(e) { toast('Error: '+e.message,'error'); }
+  $('submit-order').textContent = 'Place order & deduct stock';
+});
+
+async function loadOrders() {
+  $('orders-table-wrap').innerHTML = loading();
+  const filterVal = $('orders-filter').value;
+  const snap = await getDocs(query(collection(db,'orders'), orderBy('created_at','desc'), limit(60)));
+  let rows = snap.docs.map(d=>({id:d.id,...d.data()}));
+  if (filterVal) rows = rows.filter(r=>r.platform===filterVal);
+  if (!rows.length) { $('orders-table-wrap').innerHTML='<div class="empty"><div class="empty-icon">🛍</div>No orders yet.</div>'; return; }
+  let html = '<table><thead><tr><th>Time</th><th>Customer</th><th>Platform</th><th>Gross</th><th>Fee</th><th>Net</th><th>Status</th><th></th></tr></thead><tbody>';
+  rows.forEach(r => {
+    const d = r.created_at?.toDate?r.created_at.toDate():new Date();
+    const platCls = r.platform==='ShopeeFood'?'plat-sf':'plat-manual';
+    html += `<tr>
+      <td class="mono">${d.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'})}</td>
+      <td style="font-weight:500;">${r.customer_name||'—'}</td>
+      <td><span class="badge ${platCls}">${r.platform||''}</span></td>
+      <td class="mono">${fmt(r.gross_amount)}</td>
+      <td class="mono" style="color:var(--danger);">${r.platform_fee?'-'+fmt(r.platform_fee):'—'}</td>
+      <td style="color:var(--accent);font-weight:500;">${fmt(r.net_amount)}</td>
+      <td><span class="order-status status-${r.status||'pending'}">${r.status||'pending'}</span></td>
+      <td>${r.status!=='cancelled'?`<button class="btn btn-sm btn-danger" data-cancel-order="${r.id}">Cancel</button>`:'—'}</td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  $('orders-table-wrap').innerHTML = html;
+  document.querySelectorAll('[data-cancel-order]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (!confirm('Cancel order and reverse inventory?')) return;
+      const orderId = btn.dataset.cancelOrder;
+      const b = writeBatch(db);
+      b.update(doc(db,'orders',orderId),{status:'cancelled'});
+      const movSnap = await getDocs(query(collection(db,'inventory_movements'),where('reference_id','==',orderId),where('type','==','OUT')));
+      movSnap.docs.forEach(m => {
+        const mv = m.data();
+        b.update(doc(db,'inventory_items',mv.item_id),{current_stock:increment(mv.qty)});
+        b.set(doc(collection(db,'inventory_movements')),{...mv,type:'IN',reference:'cancellation',created_at:serverTimestamp()});
+      });
+      await b.commit();
+      toast('Order cancelled — stock reversed','warn');
+      loadOrders();
+    });
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// PROFIT
+// ═══════════════════════════════════════════════════════════════════════
+async function loadProfit() {
+  const now = new Date();
+  const startOfMonth = new Date(now.getFullYear(),now.getMonth(),1);
+  const snap = await getDocs(query(collection(db,'order_profit'), orderBy('created_at','desc'), limit(500)));
+  const monthRows = snap.docs.map(d=>d.data()).filter(r=>{
+    const d=r.created_at?.toDate?r.created_at.toDate():new Date(0);
+    return d>=startOfMonth;
+  });
+  const totalRevenue = monthRows.reduce((s,r)=>s+(r.revenue||0),0);
+  const totalCOGS = monthRows.reduce((s,r)=>s+(r.cogs||0),0);
+  const totalProfit = monthRows.reduce((s,r)=>s+(r.profit||0),0);
+  const totalFees = monthRows.reduce((s,r)=>s+(r.revenue||0)-(r.revenue||0),0); // placeholder
+  const estFees = totalRevenue * 0.17;
+  $('fin-gross').textContent=fmt(totalRevenue+estFees);
+  $('fin-fees').textContent='-'+fmt(estFees);
+  $('fin-cogs').textContent='-'+fmt(totalCOGS);
+  $('fin-profit').textContent=fmt(totalProfit);
+  const total = totalRevenue+totalCOGS+1;
+  $('profit-bar').innerHTML=`
+    <div class="pb-seg" style="width:${Math.round((totalRevenue/total)*65)}%;background:#1fc98a;"></div>
+    <div class="pb-seg" style="width:${Math.round((totalCOGS/total)*65)}%;background:#f4a61d;"></div>
+    <div class="pb-seg" style="flex:1;background:#4fa8e8;"></div>`;
+  $('profit-legend').innerHTML=`
+    <span><span class="legend-dot" style="background:#1fc98a;"></span>Net revenue ${fmt(totalRevenue)}</span>
+    <span><span class="legend-dot" style="background:#f4a61d;"></span>COGS ${fmt(totalCOGS)}</span>
+    <span><span class="legend-dot" style="background:#4fa8e8;"></span>Profit ${fmt(totalProfit)}</span>`;
+  const recSnap = await getDocs(collection(db,'recipes'));
+  const recs = recSnap.docs.map(d=>({id:d.id,...d.data()}));
+  if (!recs.length) { $('profit-table-wrap').innerHTML='<div class="empty"><div class="empty-icon">📊</div>Add recipes to see per-menu profit.</div>'; return; }
+  let html='<table><thead><tr><th>Product</th><th>Sale price</th><th>Est. COGS (30%)</th><th>Shopee net</th><th>Est. margin</th></tr></thead><tbody>';
+  recs.forEach(r => {
+    const price=r.selling_price||0, netSF=price*0.83, cogs=price*0.3, margin=netSF?((netSF-cogs)/netSF*100).toFixed(0):0;
+    const mc = margin>50?'var(--accent)':margin>30?'var(--warn)':'var(--danger)';
+    html+=`<tr><td style="font-weight:500;">${r.product_name}</td><td class="mono">${fmt(price)}</td><td class="mono">${fmt(cogs)}</td><td class="mono">${fmt(netSF)}</td><td style="color:${mc};font-weight:600;">${margin}%</td></tr>`;
+  });
+  $('profit-table-wrap').innerHTML = html+'</tbody></table>';
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════════════════════════════════════
+async function loadDashboard() {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const ordSnap = await getDocs(query(collection(db,'orders'), orderBy('created_at','desc'), limit(200)));
+  const allOrders = ordSnap.docs.map(d=>({id:d.id,...d.data()}));
+  const todayOrds = allOrders.filter(o=>{
+    const d=o.created_at?.toDate?o.created_at.toDate():new Date(0);
+    return d>=today && o.status!=='cancelled';
+  });
+  const gross=todayOrds.reduce((s,o)=>s+(o.gross_amount||0),0);
+  const net=todayOrds.reduce((s,o)=>s+(o.net_amount||0),0);
+  const profSnap = await getDocs(query(collection(db,'order_profit'), orderBy('created_at','desc'), limit(200)));
+  const todayProfit = profSnap.docs.map(d=>d.data()).filter(p=>{
+    const d=p.created_at?.toDate?p.created_at.toDate():new Date(0);
+    return d>=today;
+  }).reduce((s,p)=>s+(p.profit||0),0);
+  $('dash-orders').textContent = todayOrds.length;
+  $('dash-gross').textContent = fmt(gross);
+  $('dash-net').textContent = fmt(net);
+  $('dash-profit').textContent = fmt(todayProfit);
+
+  // Top products (from order_items)
+  const productCounts={};
+  for (const o of todayOrds.slice(0,20)) {
+    const oiSnap = await getDocs(query(collection(db,'order_items'),where('order_id','==',o.id)));
+    oiSnap.docs.forEach(d=>{ const it=d.data(); productCounts[it.product_name]=(productCounts[it.product_name]||0)+(it.qty||1); });
+  }
+  const sorted=Object.entries(productCounts).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const maxQ=sorted[0]?.[1]||1;
+  const colors=['#1fc98a','#5DCAA5','#9FE1CB','#B4B2A9','#555d6b'];
+  $('dash-products').innerHTML = sorted.length
+    ? '<div style="display:flex;flex-direction:column;gap:10px;padding:4px 0;">' +
+      sorted.map(([name,qty],i)=>`<div style="font-size:12.5px;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:5px;"><span>${name}</span><span style="font-weight:600;font-family:var(--mono);">${qty} cups</span></div>
+        <div style="height:4px;background:var(--bg3);border-radius:99px;"><div style="height:100%;width:${Math.round(qty/maxQ*100)}%;background:${colors[i]};border-radius:99px;transition:width .5s;"></div></div>
+      </div>`).join('') + '</div>'
+    : '<div class="empty"><div class="empty-icon">📉</div>No orders today yet.</div>';
+
+  // Alerts
+  const invSnap=await getDocs(collection(db,'inventory_items'));
+  const alerts=[];
+  invSnap.docs.forEach(d=>{const it=d.data();if((it.current_stock||0)<(it.min_stock||0))alerts.push({type:'danger',text:`${it.name} low stock`,sub:`${it.current_stock} ${it.unit} remaining — min ${it.min_stock}` });});
+  try {
+    const bSnap=await getDocs(query(collection(db,'inventory_batches'),orderBy('expiry_date','asc')));
+    bSnap.docs.slice(0,10).forEach(d=>{const b=d.data();const exp=b.expiry_date?.toDate?b.expiry_date.toDate():null;if(exp){const days=Math.ceil((exp-today)/86400000);if(days<=3&&days>0)alerts.push({type:'warn',text:`${b.item_name} expires in ${days}d`,sub:`${b.remaining_qty} ${b.unit||''} left — use FIFO first`});}});
+  } catch(e){}
+  $('dash-alerts').innerHTML = alerts.length
+    ? alerts.map(a=>{
+        const ic=a.type==='danger'?{bg:'rgba(232,91,91,.15)',c:'var(--danger)',t:'!'}:{bg:'rgba(244,166,29,.15)',c:'var(--warn)',t:'⚠'};
+        return `<div class="alert-row"><div class="alert-icon" style="background:${ic.bg};color:${ic.c};">${ic.t}</div><div><div class="alert-text">${a.text}</div><div class="alert-sub">${a.sub}</div></div></div>`;
+      }).join('')
+    : '<div class="alert-row"><div class="alert-icon" style="background:rgba(31,201,138,.15);color:var(--accent);">✓</div><div><div class="alert-text">All clear</div><div class="alert-sub">No low stock or expiry alerts</div></div></div>';
+
+  // Weekly chart
+  const weekRevenue=Array(7).fill(0);
+  const nowD=new Date();
+  allOrders.filter(o=>o.status!=='cancelled').forEach(o=>{
+    const od=o.created_at?.toDate?o.created_at.toDate():null;
+    if(!od)return;
+    const diff=Math.floor((nowD-od)/86400000);
+    if(diff>=0&&diff<7)weekRevenue[6-diff]+=(o.gross_amount||0);
+  });
+  const maxR=Math.max(...weekRevenue,1);
+  const days=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  $('dash-chart').innerHTML=weekRevenue.map((v,i)=>`
+    <div class="chart-bar-wrap">
+      <div class="chart-bar-val">${v>0?'Rp'+(v/1000).toFixed(0)+'K':''}</div>
+      <div class="chart-bar" style="height:${Math.max(4,Math.round(v/maxR*90))}px;background:${i===6?'#1fc98a':i===5?'#5DCAA5':'#2a3040'};"></div>
+      <div class="chart-bar-label">${days[i]}</div>
+    </div>`).join('');
+}
+
+// ── initial load ───────────────────────────────────────────────────────
+loadDashboard();
 </script>
+</body>
+</html>
+HTMLEOF
+echo "Done: $(wc -l < /mnt/user-data/outputs/boba-pos.html) lines"
